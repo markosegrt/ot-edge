@@ -1,0 +1,24 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Okruženje / tajne
+.env
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Podaci koji se generišu
+*.pcap
+!tests/pcaps/.gitkeep
+
+# Baza (lokalni podaci)
+*.db
+*.sqlite
