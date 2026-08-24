@@ -1,0 +1,68 @@
+services:
+
+  # ---- Simulator: Modbus TCP server (mrežni izlog) ----
+  plant-sim:
+    build:
+      context: .
+      dockerfile: simulator/Dockerfile
+    command: python -m simulator.modbus_server
+    environment:
+      PYTHONUNBUFFERED: "1"
+      MODBUS_PORT: 502
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.10
+
+  # ---- Simulator: OPC UA server (procesni izlog) ----
+  plant-opcua:
+    build:
+      context: .
+      dockerfile: simulator/Dockerfile
+    command: python -m simulator.opcua_server
+    environment:
+      PYTHONUNBUFFERED: "1"
+      OPCUA_PORT: 4840
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.11
+
+  # ---- HMI klijent: čita često, povremeno komanduje ----
+  hmi-sim:
+    build:
+      context: .
+      dockerfile: clients/Dockerfile
+    command: python -m clients.modbus_client
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PROFIL: hmi
+      MODBUS_HOST: 192.168.10.10
+      MODBUS_PORT: 502
+    depends_on:
+      - plant-sim
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.20
+
+  # ---- SCADA klijent: čita ređe, širi opseg ----
+  scada-sim:
+    build:
+      context: .
+      dockerfile: clients/Dockerfile
+    command: python -m clients.modbus_client
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PROFIL: scada
+      MODBUS_HOST: 192.168.10.10
+      MODBUS_PORT: 502
+    depends_on:
+      - plant-sim
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.30
+
+networks:
+  otlab:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24
