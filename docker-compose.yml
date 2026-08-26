@@ -1,3 +1,4 @@
+# docker-compose.yml
 services:
 
   # ---- Simulator: Modbus TCP server (mrežni izlog) ----
@@ -60,9 +61,27 @@ services:
       otlab:
         ipv4_address: 192.168.10.30
 
+  # ---- Baza: PostgreSQL 16 ----
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: otedge
+      POSTGRES_PASSWORD: otedge
+      POSTGRES_DB: otedge
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.40
+
 networks:
   otlab:
     driver: bridge
     ipam:
       config:
         - subnet: 192.168.10.0/24
+
+volumes:
+  db_data:

@@ -1,2 +1,6 @@
 pymodbus==3.6.9
 asyncua==2.0.1
+sqlalchemy==2.0.36
+psycopg2-binary==2.9.10
+alembic==1.14.0
+python-dotenv==1.0.1
