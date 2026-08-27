@@ -13,12 +13,20 @@ class Settings:
     DB_PORT: str = os.getenv("DB_PORT", "5432")
     DB_NAME: str = os.getenv("DB_NAME", "otedge")
 
+    OPCUA_HOST: str = os.getenv("OPCUA_HOST", "192.168.10.11")
+    OPCUA_PORT: str = os.getenv("OPCUA_PORT", "4840")
+    OPCUA_PATH: str = os.getenv("OPCUA_PATH", "/otedge/")
+
     @property
     def database_url(self) -> str:
         return (
             f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}"
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
+
+    @property
+    def opcua_url(self) -> str:
+        return f"opc.tcp://{self.OPCUA_HOST}:{self.OPCUA_PORT}{self.OPCUA_PATH}"
 
 
 settings = Settings()
