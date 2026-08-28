@@ -17,6 +17,8 @@ class Settings:
     OPCUA_PORT: str = os.getenv("OPCUA_PORT", "4840")
     OPCUA_PATH: str = os.getenv("OPCUA_PATH", "/otedge/")
 
+    PCAP_PATH: str = os.getenv("PCAP_PATH", "tests/pcaps/lab_normal.pcap")
+
     @property
     def database_url(self) -> str:
         return (
@@ -28,5 +30,8 @@ class Settings:
     def opcua_url(self) -> str:
         return f"opc.tcp://{self.OPCUA_HOST}:{self.OPCUA_PORT}{self.OPCUA_PATH}"
 
+    @property
+    def pcap_path(self) -> str:
+        return self.PCAP_PATH
 
 settings = Settings()

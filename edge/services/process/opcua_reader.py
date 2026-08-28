@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime, timezone
-
+from edge.domain.services.process_reader import ProcessReader
 from asyncua import Client, Node
 
 from edge.config.settings import settings
@@ -45,7 +45,7 @@ class TelemetryHandler:
         return float(raw)
 
 
-class OpcUaReader:
+class OpcUaReader(ProcessReader):
     def __init__(self, repository: TelemetryRepository):
         self.repository = repository
 
