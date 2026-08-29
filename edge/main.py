@@ -33,7 +33,7 @@ async def main() -> None:
     engine = RuleEngine(rules)
     normalizer = BasicNormalizer()
     event_processor: EventProcessor = BasicEventProcessor(
-        normalizer, engine, device_repository, alert_repository
+        normalizer, engine, device_repository, alert_repository, baseline
     )
 
     process_reader: ProcessReader = OpcUaReader(telemetry_repository)

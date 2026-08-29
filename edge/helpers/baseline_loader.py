@@ -15,6 +15,7 @@ def load_baseline(path: str) -> dict[str, BaselineDevice]:
             device_type=DeviceType(entry["type"]),
             name=entry["name"],
             trusted=entry.get("trusted", True),
+            can_write=entry.get("can_write", False),
         )
         result[device.ip] = device
     return result

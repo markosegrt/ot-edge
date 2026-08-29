@@ -2,10 +2,12 @@ from edge.domain.models.rule_config import RuleConfig
 from edge.domain.services.rule import Rule
 from edge.services.rules.rule_new_device import NewDeviceRule
 from edge.services.rules.rule_unknown_to_plc import UnknownToPlcRule
+from edge.services.rules.rule_unauthorized_write import UnauthorizedWriteRule
 
 RULE_CLASSES = {
     "RULE-001": NewDeviceRule,
     "RULE-002": UnknownToPlcRule,
+    "RULE-007": UnauthorizedWriteRule,
 }
 
 

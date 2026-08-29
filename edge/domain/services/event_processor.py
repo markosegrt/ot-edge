@@ -7,3 +7,7 @@ class EventProcessor(ABC):
     @abstractmethod
     def process_flow(self, flow: Flow) -> None:
         ...
+
+    @abstractmethod
+    def process_modbus_write(self, write_data: dict) -> None:
+        ...

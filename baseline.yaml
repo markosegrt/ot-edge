@@ -1,13 +1,17 @@
+# baseline.yaml
 devices:
   - ip: 192.168.10.10
     type: PLC
     name: "Glavni PLC"
     trusted: true
+    can_write: false
   - ip: 192.168.10.20
     type: HMI
     name: "Operaterski HMI"
     trusted: true
+    can_write: true
   - ip: 192.168.10.30
     type: SCADA
     name: "SCADA stanica"
     trusted: true
+    can_write: false

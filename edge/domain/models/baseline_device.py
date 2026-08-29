@@ -9,3 +9,4 @@ class BaselineDevice:
     device_type: DeviceType
     name: str
     trusted: bool
+    can_write: bool = False

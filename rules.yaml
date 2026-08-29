@@ -8,3 +8,8 @@
   name: unknown_device_talks_to_plc
   enabled: true
   severity: HIGH
+
+- id: RULE-007
+  name: unauthorized_modbus_write
+  enabled: true
+  severity: HIGH
