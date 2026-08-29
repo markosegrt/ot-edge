@@ -1,0 +1,10 @@
+# rules.yaml
+- id: RULE-001
+  name: new_device_appeared
+  enabled: true
+  severity: MEDIUM
+
+- id: RULE-002
+  name: unknown_device_talks_to_plc
+  enabled: true
+  severity: HIGH

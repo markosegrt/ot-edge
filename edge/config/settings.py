@@ -18,8 +18,8 @@ class Settings:
     OPCUA_PATH: str = os.getenv("OPCUA_PATH", "/otedge/")
 
     PCAP_PATH: str = os.getenv("PCAP_PATH", "tests/pcaps/lab_normal.pcap")
-
     BASELINE_PATH: str = os.getenv("BASELINE_PATH", "baseline.yaml")
+    RULES_PATH: str = os.getenv("RULES_PATH", "rules.yaml")
 
     UNAVAILABLE_THRESHOLD_SECONDS: int = int(os.getenv("UNAVAILABLE_THRESHOLD_SECONDS", "30"))
 
@@ -43,6 +43,12 @@ class Settings:
         return self.BASELINE_PATH
 
     @property
+    def rules_path(self) -> str:
+        return self.RULES_PATH
+
+    @property
     def unavailable_threshold_seconds(self) -> int:
         return self.UNAVAILABLE_THRESHOLD_SECONDS
+
+
 settings = Settings()
