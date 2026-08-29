@@ -21,6 +21,8 @@ class Settings:
 
     BASELINE_PATH: str = os.getenv("BASELINE_PATH", "baseline.yaml")
 
+    UNAVAILABLE_THRESHOLD_SECONDS: int = int(os.getenv("UNAVAILABLE_THRESHOLD_SECONDS", "30"))
+
     @property
     def database_url(self) -> str:
         return (
@@ -40,4 +42,7 @@ class Settings:
     def baseline_path(self) -> str:
         return self.BASELINE_PATH
 
+    @property
+    def unavailable_threshold_seconds(self) -> int:
+        return self.UNAVAILABLE_THRESHOLD_SECONDS
 settings = Settings()

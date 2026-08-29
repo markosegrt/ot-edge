@@ -41,3 +41,7 @@ class PcapReader(NetworkReader):
             self.inventory.observe_flow(flow)
 
         print(f"PcapReader: procitano {len(packets)} paketa, upisano {len(flows)} tokova")
+
+        if flows:
+            last_packet_time = max(flow.last_seen for flow in flows)
+            self.inventory.check_availability(last_packet_time)
