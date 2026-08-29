@@ -1,33 +1,21 @@
 # docker-compose.yml
 services:
 
-  # ---- Simulator: Modbus TCP server (mrežni izlog) ----
-  plant-sim:
+  # ---- Simulator postrojenja: jedan mozak, Modbus :502 + OPC UA :4840 ----
+  plant:
     build:
       context: .
       dockerfile: simulator/Dockerfile
-    command: python -m simulator.modbus_server
+    command: python -m simulator.plant_server
     environment:
       PYTHONUNBUFFERED: "1"
       MODBUS_PORT: 502
-    networks:
-      otlab:
-        ipv4_address: 192.168.10.10
-
-  # ---- Simulator: OPC UA server (procesni izlog) ----
-  plant-opcua:
-    build:
-      context: .
-      dockerfile: simulator/Dockerfile
-    command: python -m simulator.opcua_server
-    environment:
-      PYTHONUNBUFFERED: "1"
       OPCUA_PORT: 4840
     ports:
       - "4840:4840"
     networks:
       otlab:
-        ipv4_address: 192.168.10.11
+        ipv4_address: 192.168.10.10
 
   # ---- HMI klijent: čita često, povremeno komanduje ----
   hmi-sim:
@@ -41,7 +29,7 @@ services:
       MODBUS_HOST: 192.168.10.10
       MODBUS_PORT: 502
     depends_on:
-      - plant-sim
+      - plant
     networks:
       otlab:
         ipv4_address: 192.168.10.20
@@ -58,7 +46,7 @@ services:
       MODBUS_HOST: 192.168.10.10
       MODBUS_PORT: 502
     depends_on:
-      - plant-sim
+      - plant
     networks:
       otlab:
         ipv4_address: 192.168.10.30
