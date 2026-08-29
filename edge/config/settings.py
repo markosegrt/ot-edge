@@ -19,6 +19,8 @@ class Settings:
 
     PCAP_PATH: str = os.getenv("PCAP_PATH", "tests/pcaps/lab_normal.pcap")
 
+    BASELINE_PATH: str = os.getenv("BASELINE_PATH", "baseline.yaml")
+
     @property
     def database_url(self) -> str:
         return (
@@ -33,5 +35,9 @@ class Settings:
     @property
     def pcap_path(self) -> str:
         return self.PCAP_PATH
+
+    @property
+    def baseline_path(self) -> str:
+        return self.BASELINE_PATH
 
 settings = Settings()

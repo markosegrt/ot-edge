@@ -6,13 +6,15 @@ from scapy.layers.inet import IP, TCP
 
 from edge.config.settings import settings
 from edge.domain.repositories.flow_repository import FlowRepository
+from edge.domain.services.inventory_service import InventoryService
 from edge.domain.services.network_reader import NetworkReader
 from edge.services.network.flow_builder import FlowBuilder
 
 
 class PcapReader(NetworkReader):
-    def __init__(self, repository: FlowRepository):
+    def __init__(self, repository: FlowRepository, inventory: InventoryService):
         self.repository = repository
+        self.inventory = inventory
 
     def run(self) -> None:
         packets = rdpcap(settings.pcap_path)
@@ -36,5 +38,6 @@ class PcapReader(NetworkReader):
         flows = builder.get_flows()
         for flow in flows:
             self.repository.save(flow)
+            self.inventory.observe_flow(flow)
 
         print(f"PcapReader: procitano {len(packets)} paketa, upisano {len(flows)} tokova")
