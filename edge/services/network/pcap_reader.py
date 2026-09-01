@@ -28,6 +28,10 @@ class PcapReader(NetworkReader):
 
     def run(self) -> None:
         packets = rdpcap(settings.pcap_path)
+        if not packets:
+            print("PcapReader: prazan pcap")
+            return
+
         builder = FlowBuilder()
         write_events = []
 
@@ -47,7 +51,6 @@ class PcapReader(NetworkReader):
                 timestamp=timestamp,
             )
 
-            # Hvatanje Modbus 
             if int(tcp.dport) == MODBUS_PORT and bytes(tcp.payload):
                 info = parse_modbus(bytes(tcp.payload))
                 if info is not None and info.is_write:
@@ -63,20 +66,16 @@ class PcapReader(NetworkReader):
 
         flows = builder.get_flows()
 
-        # Prvi prolaz
         for flow in flows:
             self.repository.save(flow)
             self.inventory.observe_flow(flow)
 
         if flows:
-            last_packet_time = max(flow.last_seen for flow in flows)
-            self.inventory.check_availability(last_packet_time)
+            self.inventory.check_availability(datetime.now(timezone.utc))
 
-        # Drugi prolaz
         for flow in flows:
             self.event_processor.process_flow(flow)
 
-        # Treci prolaz
         for we in write_events:
             self.event_processor.process_modbus_write(we)
 

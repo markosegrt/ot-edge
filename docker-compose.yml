@@ -81,7 +81,9 @@ services:
       OPCUA_PORT: 4840
       OPCUA_PATH: /otedge/
       NETWORK_SOURCE: pcap
-      PCAP_PATH: tests/pcaps/lab_normal.pcap
+      PCAP_PATH: tests/pcaps/pair.pcap
+      PROCESS_SOURCE: file
+      TELEMETRY_PATH: tests/telemetry/pair_telemetry.jsonl
       BASELINE_PATH: baseline.yaml
       RULES_PATH: rules.yaml
     volumes:

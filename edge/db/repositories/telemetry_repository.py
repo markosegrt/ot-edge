@@ -3,7 +3,7 @@ from edge.domain.enums.quality import Quality
 from edge.domain.repositories.telemetry_repository import TelemetryRepository
 from edge.db.base import SessionLocal
 from edge.db.orm.process_telemetry import ProcessTelemetryORM
-
+from datetime import datetime
 
 class SqlTelemetryRepository(TelemetryRepository):
     def save(self, telemetry: Telemetry) -> None:
@@ -36,3 +36,13 @@ class SqlTelemetryRepository(TelemetryRepository):
             unit=row.unit,
             quality=Quality(row.quality),
         )
+
+    def get_between(self, start: datetime, end: datetime) -> list[Telemetry]:
+        with SessionLocal() as session:
+            rows = (
+                session.query(ProcessTelemetryORM)
+                .filter(ProcessTelemetryORM.timestamp >= start)
+                .filter(ProcessTelemetryORM.timestamp <= end)
+                .all()
+            )
+            return [self._to_domain(row) for row in rows]

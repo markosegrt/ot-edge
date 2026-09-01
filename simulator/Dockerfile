@@ -13,3 +13,5 @@ COPY simulator/ ./simulator/
 
 # Koja se komanda pokreće zadaje se u docker-compose.yml
 # (isti image, dva različita servera: modbus i opcua).
+
+RUN apt-get update && apt-get install -y tcpdump && rm -rf /var/lib/apt/lists/*

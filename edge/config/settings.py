@@ -25,6 +25,9 @@ class Settings:
 
     NETWORK_SOURCE: str = os.getenv("NETWORK_SOURCE", "pcap")
 
+    TELEMETRY_PATH: str = os.getenv("TELEMETRY_PATH", "tests/telemetry/pair_telemetry.jsonl")
+    PROCESS_SOURCE: str = os.getenv("PROCESS_SOURCE", "live")
+
     @property
     def database_url(self) -> str:
         return (
@@ -55,5 +58,13 @@ class Settings:
     @property
     def network_source(self) -> str:
         return self.NETWORK_SOURCE
+
+    @property
+    def telemetry_path(self) -> str:
+        return self.TELEMETRY_PATH
+
+    @property
+    def process_source(self) -> str:
+        return self.PROCESS_SOURCE
 
 settings = Settings()
