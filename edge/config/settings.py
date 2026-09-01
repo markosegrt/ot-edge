@@ -23,6 +23,8 @@ class Settings:
 
     UNAVAILABLE_THRESHOLD_SECONDS: int = int(os.getenv("UNAVAILABLE_THRESHOLD_SECONDS", "30"))
 
+    NETWORK_SOURCE: str = os.getenv("NETWORK_SOURCE", "pcap")
+
     @property
     def database_url(self) -> str:
         return (
@@ -49,6 +51,9 @@ class Settings:
     @property
     def unavailable_threshold_seconds(self) -> int:
         return self.UNAVAILABLE_THRESHOLD_SECONDS
-
+    
+    @property
+    def network_source(self) -> str:
+        return self.NETWORK_SOURCE
 
 settings = Settings()

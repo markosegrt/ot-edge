@@ -77,7 +77,7 @@ services:
       DB_USER: otedge
       DB_PASSWORD: otedge
       DB_NAME: otedge
-      OPCUA_HOST: localhost
+      OPCUA_HOST: 192.168.10.10
       OPCUA_PORT: 4840
       OPCUA_PATH: /otedge/
       NETWORK_SOURCE: pcap
@@ -89,14 +89,12 @@ services:
       - ./baseline.yaml:/app/baseline.yaml
       - ./rules.yaml:/app/rules.yaml
       - ./tests:/app/tests
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    network_mode: "service:plant"
     depends_on:
       - plant
       - db
-
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.50
 
 networks:
   otlab:

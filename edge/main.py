@@ -11,6 +11,7 @@ from edge.domain.services.inventory_service import InventoryService
 from edge.domain.services.event_processor import EventProcessor
 from edge.services.process.opcua_reader import OpcUaReader
 from edge.services.network.pcap_reader import PcapReader
+from edge.services.network.live_reader import LiveReader
 from edge.services.inventory.inventory_service import BasicInventoryService
 from edge.services.normalization.normalizer import BasicNormalizer
 from edge.services.events.event_processor import BasicEventProcessor
@@ -37,7 +38,15 @@ async def main() -> None:
     )
 
     process_reader: ProcessReader = OpcUaReader(telemetry_repository)
-    network_reader: NetworkReader = PcapReader(flow_repository, inventory, event_processor)
+
+    if settings.network_source == "live":
+        network_reader: NetworkReader = LiveReader(
+            flow_repository, inventory, event_processor
+        )
+    else:
+        network_reader: NetworkReader = PcapReader(
+            flow_repository, inventory, event_processor
+        )
 
     await asyncio.gather(
         process_reader.run(),
