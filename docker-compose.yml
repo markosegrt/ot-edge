@@ -11,8 +11,6 @@ services:
       PYTHONUNBUFFERED: "1"
       MODBUS_PORT: 502
       OPCUA_PORT: 4840
-    ports:
-      - "4840:4840"
     networks:
       otlab:
         ipv4_address: 192.168.10.10
@@ -65,6 +63,40 @@ services:
     networks:
       otlab:
         ipv4_address: 192.168.10.40
+
+  # ---- Edge: sniffi uzivo (deli plant namespace), cita OPC UA, primenjuje pravila ----
+  ot-edge:
+    build:
+      context: .
+      dockerfile: edge/Dockerfile
+    command: python -m edge.main
+    environment:
+      PYTHONUNBUFFERED: "1"
+      DB_HOST: 192.168.10.40
+      DB_PORT: 5432
+      DB_USER: otedge
+      DB_PASSWORD: otedge
+      DB_NAME: otedge
+      OPCUA_HOST: localhost
+      OPCUA_PORT: 4840
+      OPCUA_PATH: /otedge/
+      NETWORK_SOURCE: pcap
+      PCAP_PATH: tests/pcaps/lab_normal.pcap
+      BASELINE_PATH: baseline.yaml
+      RULES_PATH: rules.yaml
+    volumes:
+      - ./edge:/app/edge
+      - ./baseline.yaml:/app/baseline.yaml
+      - ./rules.yaml:/app/rules.yaml
+      - ./tests:/app/tests
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    network_mode: "service:plant"
+    depends_on:
+      - plant
+      - db
+
 
 networks:
   otlab:

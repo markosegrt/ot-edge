@@ -1,4 +1,3 @@
-# rules.yaml
 - id: RULE-001
   name: new_device_appeared
   enabled: true
