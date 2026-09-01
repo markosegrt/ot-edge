@@ -11,3 +11,7 @@ class EventProcessor(ABC):
     @abstractmethod
     def process_modbus_write(self, write_data: dict) -> None:
         ...
+
+    @abstractmethod
+    def process_unavailable_device(self, device) -> None:
+        ...

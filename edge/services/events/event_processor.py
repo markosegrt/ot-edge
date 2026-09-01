@@ -1,5 +1,13 @@
+from datetime import datetime, timezone
+
+from edge.domain.enums.device_type import DeviceType
+from edge.domain.enums.event_type import EventType
+from edge.domain.enums.protocol import Protocol
+from edge.domain.enums.severity import Severity
 from edge.domain.models.baseline_device import BaselineDevice
+from edge.domain.models.device import Device
 from edge.domain.models.flow import Flow
+from edge.domain.models.security_alert import SecurityAlert
 from edge.domain.repositories.device_repository import DeviceRepository
 from edge.domain.repositories.security_event_repository import SecurityEventRepository
 from edge.domain.services.event_processor import EventProcessor
@@ -41,6 +49,22 @@ class BasicEventProcessor(EventProcessor):
             timestamp=write_data["timestamp"],
         )
         self._evaluate_and_store(event)
+
+    def process_unavailable_device(self, device: Device) -> None:
+        severity = Severity.HIGH if device.device_type == DeviceType.PLC else Severity.MEDIUM
+
+        alert = SecurityAlert(
+            timestamp=datetime.now(timezone.utc),
+            rule_id="RULE-003",
+            severity=severity,
+            event_type=EventType.NETWORK,
+            source=device.ip,
+            destination=device.ip,
+            device=device.ip,
+            protocol=Protocol.OTHER,
+            extra={"reason": "device_unavailable", "device_type": device.device_type.value},
+        )
+        self.alert_repository.save(alert)
 
     def _evaluate_and_store(self, event) -> None:
         context = self._build_context()

@@ -71,7 +71,9 @@ class PcapReader(NetworkReader):
             self.inventory.observe_flow(flow)
 
         if flows:
-            self.inventory.check_availability(datetime.now(timezone.utc))
+            unavailable = self.inventory.check_availability(datetime.now(timezone.utc))
+            for device in unavailable:
+                self.event_processor.process_unavailable_device(device)
 
         for flow in flows:
             self.event_processor.process_flow(flow)

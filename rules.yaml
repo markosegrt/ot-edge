@@ -8,7 +8,13 @@
   enabled: true
   severity: HIGH
 
+- id: RULE-003
+  name: device_unavailable
+  enabled: true
+  severity: HIGH
+
 - id: RULE-007
   name: unauthorized_modbus_write
   enabled: true
   severity: HIGH
+

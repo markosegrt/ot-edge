@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
+from edge.domain.models.device import Device
 
 from edge.domain.models.flow import Flow
 
@@ -10,5 +11,5 @@ class InventoryService(ABC):
         ...
 
     @abstractmethod
-    def check_availability(self, reference_time: datetime) -> None:
+    def check_availability(self, reference_time: datetime) -> list[Device]:
         ...

@@ -1,5 +1,6 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
+from edge.config.settings import settings
 from edge.domain.enums.device_status import DeviceStatus
 from edge.domain.enums.device_type import DeviceType
 from edge.domain.models.baseline_device import BaselineDevice
@@ -8,9 +9,7 @@ from edge.domain.models.flow import Flow
 from edge.domain.repositories.device_repository import DeviceRepository
 from edge.domain.services.inventory_service import InventoryService
 from edge.helpers.device_classifier import classify_by_ports
-from datetime import datetime, timezone, timedelta
 
-from edge.config.settings import settings
 
 class BasicInventoryService(InventoryService):
     def __init__(self, repository: DeviceRepository, baseline: dict[str, BaselineDevice]):
@@ -64,12 +63,16 @@ class BasicInventoryService(InventoryService):
             peers=[],
         )
 
-    def check_availability(self, reference_time: datetime) -> None:
+    def check_availability(self, reference_time: datetime) -> list[Device]:
         threshold = timedelta(seconds=settings.unavailable_threshold_seconds)
         devices = self.repository.get_all()
+        newly_unavailable = []
 
         for device in devices:
             silence = reference_time - device.last_seen
             if silence > threshold and device.status != DeviceStatus.UNAVAILABLE:
                 device.status = DeviceStatus.UNAVAILABLE
                 self.repository.save(device)
+                newly_unavailable.append(device)
+
+        return newly_unavailable
