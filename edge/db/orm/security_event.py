@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import BigInteger, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -24,3 +24,4 @@ class SecurityEventORM(Base):
     rule_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     correlated: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     extra: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    occurrence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)

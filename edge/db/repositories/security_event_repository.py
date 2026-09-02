@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from edge.domain.models.security_alert import SecurityAlert
 from edge.domain.enums.severity import Severity
 from edge.domain.enums.event_type import EventType
@@ -45,3 +47,25 @@ class SqlSecurityEventRepository(SecurityEventRepository):
             correlated=row.correlated,
             extra=row.extra or {},
         )
+
+    def find_recent_duplicate_id(
+        self, rule_id: str, source: str, destination: str, since: datetime
+    ) -> int | None:
+        with SessionLocal() as session:
+            row = (
+                session.query(SecurityEventORM)
+                .filter(SecurityEventORM.rule_id == rule_id)
+                .filter(SecurityEventORM.source == source)
+                .filter(SecurityEventORM.destination == destination)
+                .filter(SecurityEventORM.timestamp >= since)
+                .order_by(SecurityEventORM.timestamp.desc())
+                .first()
+            )
+            return row.id if row else None
+
+    def increment_occurrence(self, alert_id: int) -> None:
+        with SessionLocal() as session:
+            row = session.query(SecurityEventORM).filter(SecurityEventORM.id == alert_id).first()
+            if row:
+                row.occurrence_count += 1
+                session.commit()

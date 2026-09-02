@@ -69,6 +69,8 @@ class BasicEventProcessor(EventProcessor):
         self.alert_repository.save(alert)
 
     def _evaluate_and_store(self, event) -> None:
+        from datetime import timedelta
+
         context = self._build_context()
         alerts = self.engine.evaluate(event, context)
         for alert in alerts:
@@ -76,7 +78,7 @@ class BasicEventProcessor(EventProcessor):
             alert.severity = result.final_severity
             alert.correlated = result.correlated
             alert.extra["correlation"] = result.details
-            self.alert_repository.save(alert)
+            self._store_with_dedup(alert)
 
     def _build_context(self) -> RuleContext:
         devices = self.device_repository.get_all()
@@ -92,3 +94,18 @@ class BasicEventProcessor(EventProcessor):
             baseline_by_ip=self.baseline,
             ports_by_source=ports_by_source,
         )
+
+    def _store_with_dedup(self, alert) -> None:
+        from datetime import timedelta
+
+        window_start = alert.timestamp - timedelta(seconds=60)
+        duplicate_id = self.alert_repository.find_recent_duplicate_id(
+            rule_id=alert.rule_id,
+            source=alert.source,
+            destination=alert.destination,
+            since=window_start,
+        )
+        if duplicate_id is not None:
+            self.alert_repository.increment_occurrence(duplicate_id)
+        else:
+            self.alert_repository.save(alert)
