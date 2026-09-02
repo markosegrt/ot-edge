@@ -1,0 +1,21 @@
+BENCHMARK (prosek 3 prolaza, pair.pcap)
+
+Lanac smanjenja:
+  paketi:  4879
+  tokovi:  6
+  upisi:   6
+  odnos tokovi/paketi: 0.12%
+
+Performanse:
+  prosecno vreme obrade:  1.718 s
+  propusnost:             2840 paketa/s
+  vrsna memorija:         157 MB
+  prosecno CPU vreme:     4.582 s
+  rasipanje vremena:      1.704-1.731 s (<2%)
+
+CENA KORELACIJE (prosek 3 prolaza):
+  bez korelacije:  1.467 s  (3326 paketa/s)
+  sa korelacijom:  1.718 s  (2840 paketa/s)
+  razlika:         0.251 s  (~17% sporije)
+  memorija:        nepromenjena (~157 MB)
+  napomena: cena raste sa brojem alarma (SQL upit po alarmu), ne sa brojem paketa
