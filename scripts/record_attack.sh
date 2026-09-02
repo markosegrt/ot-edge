@@ -1,49 +1,50 @@
 #!/usr/bin/env bash
 set -e
 
-# Trajanje snimanja (podrazumevano 40s — dovoljno da napad od ~20s stane unutra)
-DURATION="${1:-40}"
+TELEMETRY_OUT="tests/telemetry/pair_telemetry.jsonl"
+PCAP_OUT="tests/pcaps/pair.pcap"
 
-PCAP_OUT="tests/pcaps/attack.pcap"
-TELEMETRY_OUT="tests/telemetry/attack_telemetry.jsonl"
+# Trajanje snimanja: 6 upisa x 70s = 350s napada + margina za povezivanje i rep.
+TRAJANJE=370
 
-echo "=== Snimanje NAPADA (mreža + proces), ${DURATION}s ==="
+echo "=== Snimanje merne serije: napad + proces + mreza (~6.5 min) ==="
+echo "HMI ne dira pumpe (HMI_VEROVATNOCA_KOMANDE=0). Jedini koji pise je napadac."
+echo ""
 
-# 1. Obrisi stari attack snimak (NE dira normalni pair.*)
-echo "[1/6] Brisem stari attack snimak..."
-rm -f "$PCAP_OUT" "$TELEMETRY_OUT"
-docker compose exec plant sh -c "rm -f /tmp/attack.pcap" 2>/dev/null || true
+# 1. Podigni lab sa ucutkanim HMI. scada cita, plant kuca, db radi.
+echo "[1/6] Dizem lab (plant, hmi ucutkan, scada, db)..."
+docker compose up -d plant scada-sim db
+HMI_VEROVATNOCA_KOMANDE=0 docker compose up -d --force-recreate hmi-sim
+sleep 5
 
-# 2. Pokreni pcap snimanje u plant (timeout ga sam gasi posle DURATION)
-echo "[2/6] Pokrecem pcap snimanje u plant..."
-docker compose exec -d plant sh -c "timeout ${DURATION} tcpdump -i any -w /tmp/attack.pcap 'tcp' 2>/dev/null"
+# 2. Obrisi stari par.
+echo "[2/6] Brisem stari par..."
+docker compose run --rm ot-edge sh -c "rm -f /app/$PCAP_OUT /app/$TELEMETRY_OUT" 2>/dev/null || true
+docker compose exec plant sh -c "rm -f /tmp/pair.pcap" 2>/dev/null || true
 
-# 3. Pokreni telemetriju u ot-edge (timeout ga sam gasi)
-echo "[3/6] Pokrecem telemetriju snimanje u ot-edge..."
-docker compose exec -d -e TELEMETRY_OUTPUT="$TELEMETRY_OUT" ot-edge sh -c "timeout ${DURATION} python -m edge.tools.record_telemetry 2>/dev/null"
+# 3. Pokreni tcpdump u plant kontejneru sa ugradjenim limitom trajanja.
+#    -G TRAJANJE + -W 1 = snimi jedan fajl duzine TRAJANJE sekundi pa stani.
+echo "[3/6] Pokrecem pcap snimanje u plant (limit ${TRAJANJE}s)..."
+docker compose exec -d plant tcpdump -i any -w /tmp/pair.pcap -G "$TRAJANJE" -W 1 port 502
 
-# 4. Kratka pauza da snimanje krene, pa pusti napadaca
-echo "[4/6] Cekam 3s pa pustam napadaca..."
+# 4. Pokreni telemetriju kao ZASEBAN kontejner (Edge servis ne stoji uzivo).
+#    timeout ga sam ugasi posle TRAJANJE sekundi.
+echo "[4/6] Pokrecem telemetriju snimanje (zaseban kontejner)..."
+docker compose run --rm -d \
+  -e TELEMETRY_OUTPUT="$TELEMETRY_OUT" \
+  ot-edge timeout "$TRAJANJE" python -m edge.tools.record_telemetry
 sleep 3
-docker compose run --rm rogue-sim
 
-# 5. Cekaj da snimanje (timeout) zavrsi
-echo "[5/6] Cekam da snimanje zavrsi..."
-REMAINING=$((DURATION - 20))
-if [ "$REMAINING" -gt 0 ]; then
-  sleep "$REMAINING"
-fi
-sleep 3
+# 5. Pusti napadaca. Blokira dok ne zavrsi svih 6 upisa (~350s).
+echo "[5/6] Pustam napadaca (traje ~6 min, 6 upisa x 70s)..."
+docker compose run --rm -e ATTACK=write rogue-sim
 
-# 6. Izvuci pcap
-echo "[6/6] Izvlacim pcap..."
-docker compose cp plant:/tmp/attack.pcap "$PCAP_OUT"
+# 6. Sacekaj da tcpdump/telemetrija dostignu svoj limit, pa izvuci pcap.
+echo "[6/6] Cekam kraj snimanja i izvlacim pcap..."
+sleep 20
+docker compose cp plant:/tmp/pair.pcap "$PCAP_OUT"
 
 echo ""
 echo "=== Gotovo ==="
-echo "Mreza (napad):  $PCAP_OUT"
-echo "Proces (napad): $TELEMETRY_OUT"
-echo ""
-echo "Provera:"
-echo "  paketa u pcap:      $(docker compose exec plant sh -c "tcpdump -r /tmp/attack.pcap 2>/dev/null | wc -l" | tr -d '[:space:]')"
+echo "  paketa u pcap:      $(docker compose exec plant sh -c 'tcpdump -r /tmp/pair.pcap 2>/dev/null | wc -l' | tr -d '[:space:]')"
 echo "  zapisa telemetrije: $(wc -l < "$TELEMETRY_OUT" 2>/dev/null | tr -d '[:space:]')"

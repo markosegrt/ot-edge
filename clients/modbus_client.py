@@ -44,7 +44,7 @@ PROFILI = {
         interval_citanja=0.5,
         broj_registara=3,
         komanduje=True,
-        verovatnoca_komande=0.05,   # ~5% ciklusa posalje komandu
+        verovatnoca_komande=float(os.environ.get("HMI_VEROVATNOCA_KOMANDE", "0.05")),
     ),
     # SCADA: cita rede, siri opseg, ne komanduje iz sekunde u sekundu.
     "scada": Profil(

@@ -26,6 +26,7 @@ services:
       PROFIL: hmi
       MODBUS_HOST: 192.168.10.10
       MODBUS_PORT: 502
+      HMI_VEROVATNOCA_KOMANDE: ${HMI_VEROVATNOCA_KOMANDE:-0.05}
     depends_on:
       - plant
     networks:
@@ -86,6 +87,7 @@ services:
       TELEMETRY_PATH: tests/telemetry/pair_telemetry.jsonl
       BASELINE_PATH: baseline.yaml
       RULES_PATH: rules.yaml
+      CORRELATION_ENABLED: ${CORRELATION_ENABLED:-true}
     volumes:
       - ./edge:/app/edge
       - ./baseline.yaml:/app/baseline.yaml

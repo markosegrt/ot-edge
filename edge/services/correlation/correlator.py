@@ -13,10 +13,19 @@ IMPORTANT_TAGS = ["Pumpa1.Radi", "Pumpa2.Radi", "Rezervoar.Kvar"]
 
 
 class BasicCorrelator(Correlator):
-    def __init__(self, telemetry_repository: TelemetryRepository):
+    def __init__(self, telemetry_repository: TelemetryRepository, enabled: bool = True):
         self.telemetry_repository = telemetry_repository
+        self.enabled = enabled
 
     def correlate(self, alert: SecurityAlert) -> CorrelationResult:
+        if not self.enabled:
+            return CorrelationResult(
+                score=0,
+                final_severity=alert.severity,
+                correlated=False,
+                details={"correlation_disabled": True},
+            )
+
         window = timedelta(seconds=WINDOW_SECONDS)
         start = alert.timestamp - window
         end = alert.timestamp + window

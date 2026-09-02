@@ -36,7 +36,7 @@ async def main() -> None:
     rules = build_rules(load_rules(settings.rules_path))
     engine = RuleEngine(rules)
     normalizer = BasicNormalizer()
-    correlator: Correlator = BasicCorrelator(telemetry_repository)
+    correlator: Correlator = BasicCorrelator(telemetry_repository, settings.correlation_enabled)
     event_processor: EventProcessor = BasicEventProcessor(
         normalizer, engine, correlator, device_repository, flow_repository, alert_repository, baseline
     )
