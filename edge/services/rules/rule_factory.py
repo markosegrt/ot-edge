@@ -3,10 +3,12 @@ from edge.domain.services.rule import Rule
 from edge.services.rules.rule_new_device import NewDeviceRule
 from edge.services.rules.rule_unknown_to_plc import UnknownToPlcRule
 from edge.services.rules.rule_unauthorized_write import UnauthorizedWriteRule
+from edge.services.rules.rule_port_scan import PortScanRule
 
 RULE_CLASSES = {
     "RULE-001": NewDeviceRule,
     "RULE-002": UnknownToPlcRule,
+    "RULE-006": PortScanRule,
     "RULE-007": UnauthorizedWriteRule,
 }
 

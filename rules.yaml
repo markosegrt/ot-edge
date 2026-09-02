@@ -13,6 +13,11 @@
   enabled: true
   severity: HIGH
 
+- id: RULE-006
+  name: port_scan
+  enabled: true
+  severity: HIGH
+  
 - id: RULE-007
   name: unauthorized_modbus_write
   enabled: true

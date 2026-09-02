@@ -15,7 +15,7 @@ from edge.domain.services.normalizer import Normalizer
 from edge.domain.services.correlator import Correlator
 from edge.domain.services.rule_context import RuleContext
 from edge.services.rules.rule_engine import RuleEngine
-
+from edge.domain.repositories.flow_repository import FlowRepository
 
 class BasicEventProcessor(EventProcessor):
     def __init__(
@@ -24,6 +24,7 @@ class BasicEventProcessor(EventProcessor):
         engine: RuleEngine,
         correlator: Correlator,
         device_repository: DeviceRepository,
+        flow_repository: FlowRepository,
         alert_repository: SecurityEventRepository,
         baseline: dict[str, BaselineDevice],
     ):
@@ -31,6 +32,7 @@ class BasicEventProcessor(EventProcessor):
         self.engine = engine
         self.correlator = correlator
         self.device_repository = device_repository
+        self.flow_repository = flow_repository
         self.alert_repository = alert_repository
         self.baseline = baseline
 
@@ -79,4 +81,14 @@ class BasicEventProcessor(EventProcessor):
     def _build_context(self) -> RuleContext:
         devices = self.device_repository.get_all()
         devices_by_ip = {d.ip: d for d in devices}
-        return RuleContext(devices_by_ip=devices_by_ip, baseline_by_ip=self.baseline)
+
+        ports_by_source = {}
+        flows = self.flow_repository.get_all()
+        for flow in flows:
+            ports_by_source.setdefault(flow.source_ip, set()).add(flow.destination_port)
+
+        return RuleContext(
+            devices_by_ip=devices_by_ip,
+            baseline_by_ip=self.baseline,
+            ports_by_source=ports_by_source,
+        )

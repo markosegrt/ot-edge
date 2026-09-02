@@ -1,4 +1,3 @@
-# edge/main.py
 import asyncio
 
 from edge.config.settings import settings
@@ -39,7 +38,7 @@ async def main() -> None:
     normalizer = BasicNormalizer()
     correlator: Correlator = BasicCorrelator(telemetry_repository)
     event_processor: EventProcessor = BasicEventProcessor(
-        normalizer, engine, correlator, device_repository, alert_repository, baseline
+        normalizer, engine, correlator, device_repository, flow_repository, alert_repository, baseline
     )
 
     if settings.process_source == "file":
