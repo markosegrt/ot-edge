@@ -1,4 +1,6 @@
 import asyncio
+import time
+import resource
 
 from edge.config.settings import settings
 from edge.db.repositories.telemetry_repository import SqlTelemetryRepository
@@ -57,12 +59,34 @@ async def main() -> None:
 
     if settings.process_source == "file" and settings.network_source == "pcap":
         await process_reader.run()
+        # Meri samo obradu mreze (pcap -> tokovi -> pravila -> korelacija -> baza).
+        # Procesnu cev ne merimo jer je ona ucitavanje snimka, ne obrada.
+        start = time.perf_counter()
         await asyncio.to_thread(network_reader.run)
+        elapsed = time.perf_counter() - start
+        _print_benchmark(elapsed)
     else:
         await asyncio.gather(
             process_reader.run(),
             asyncio.to_thread(network_reader.run),
         )
+
+
+def _print_benchmark(elapsed_seconds: float) -> None:
+    """
+    Ispisuje merne pokazatelje obrade nakon jednog prolaza kroz pcap.
+    ru_maxrss je vrsna rezidentna memorija procesa (na Linux-u u kilobajtima).
+    ru_utime + ru_stime je ukupno CPU vreme (korisnicko + sistemsko).
+    Ove vrednosti se parsiraju iz benchmark skripte za prosek preko vise prolaza.
+    """
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    peak_mem_mb = usage.ru_maxrss / 1024.0
+    cpu_seconds = usage.ru_utime + usage.ru_stime
+
+    print("=== BENCHMARK ===")
+    print(f"obrada_sekundi: {elapsed_seconds:.3f}")
+    print(f"vrsna_memorija_mb: {peak_mem_mb:.1f}")
+    print(f"cpu_sekundi: {cpu_seconds:.3f}")
 
 
 if __name__ == "__main__":
