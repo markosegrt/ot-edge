@@ -22,3 +22,10 @@ __pycache__/
 # Baza (lokalni podaci)
 *.db
 *.sqlite
+
+# Node / dashboard
+node_modules/
+dashboard/node_modules/
+dashboard/dist/
+dashboard/.vite/
+*.tsbuildinfo

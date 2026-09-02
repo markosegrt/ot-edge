@@ -62,7 +62,7 @@ export function CorrelationChart({ telemetry, alertTimestamp }: Props) {
           stroke="#94a3b8"
           domain={[0, 1.2]}
           ticks={[0, 1]}
-          tickFormatter={(v) => (v === 1 ? "RADI" : v === 0 ? "STOP" : "")}
+          tickFormatter={(v) => (v === 1 ? "ON" : v === 0 ? "OFF" : "")}
         />
         <Tooltip
           labelFormatter={(t) => formatTime(t as number)}

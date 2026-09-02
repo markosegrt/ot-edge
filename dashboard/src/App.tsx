@@ -1,57 +1,57 @@
 import { useState } from "react"
+import { NetworkPage } from "./pages/NetworkPage"
+import { DevicesPage } from "./pages/DevicesPage"
 import { AlarmsPage } from "./pages/AlarmsPage"
 import { CorrelationPage } from "./pages/CorrelationPage"
-import { DevicesPage } from "./pages/DevicesPage"
 
-type Tab = "alarms" | "correlation" | "devices"
+type Tab = "network" | "devices" | "alarms" | "correlation"
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "network", label: "Network" },
+  { id: "devices", label: "Devices" },
+  { id: "alarms", label: "Alarms" },
+  { id: "correlation", label: "Correlation" },
+]
 
 function App() {
-  const [tab, setTab] = useState<Tab>("alarms")
+  const [tab, setTab] = useState<Tab>("network")
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-8">
-      <h1 className="text-2xl font-bold mb-6">OT Edge Dashboard</h1>
+    <div className="min-h-screen bg-slate-900 text-slate-100">
+      <header className="border-b border-slate-800 px-8 py-5">
+        <h1 className="text-2xl font-bold tracking-tight">
+          OT Edge <span className="text-blue-400">Dashboard</span>
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Passive OT network monitoring with process correlation
+        </p>
+      </header>
 
-      <div className="flex gap-2 mb-6 border-b border-slate-700">
-        <TabButton active={tab === "alarms"} onClick={() => setTab("alarms")}>
-          Alarmi
-        </TabButton>
-        <TabButton
-          active={tab === "correlation"}
-          onClick={() => setTab("correlation")}
-        >
-          Korelacija
-        </TabButton>
-        <TabButton active={tab === "devices"} onClick={() => setTab("devices")}>
-          Uređaji
-        </TabButton>
-      </div>
+      <nav className="px-8 border-b border-slate-800">
+        <div className="flex gap-1">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`px-5 py-3 text-base font-medium border-b-2 -mb-px transition-colors ${
+                tab === t.id
+                  ? "border-blue-500 text-white"
+                  : "border-transparent text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </nav>
 
-      {tab === "alarms" && <AlarmsPage />}
-      {tab === "correlation" && <CorrelationPage />}
-      {tab === "devices" && <DevicesPage />}
+      <main className="p-8">
+        {tab === "network" && <NetworkPage />}
+        {tab === "devices" && <DevicesPage />}
+        {tab === "alarms" && <AlarmsPage />}
+        {tab === "correlation" && <CorrelationPage />}
+      </main>
     </div>
-  )
-}
-
-interface TabButtonProps {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-}
-
-function TabButton({ active, onClick, children }: TabButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
-        active
-          ? "border-blue-500 text-white"
-          : "border-transparent text-slate-400 hover:text-white"
-      }`}
-    >
-      {children}
-    </button>
   )
 }
 

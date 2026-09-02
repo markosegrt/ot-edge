@@ -23,29 +23,28 @@ export function CorrelationPage() {
       .catch((e) => setError(e.message))
   }
 
-  if (error) return <p className="text-red-400">Greška: {error}</p>
+  if (error) return <p className="text-red-400 text-base">Error: {error}</p>
 
   return (
     <div className="flex gap-6">
-      {/* Leva strana: lista alarama */}
-      <div className="w-64 shrink-0">
-        <h3 className="text-sm font-semibold text-slate-400 mb-2">Alarmi</h3>
-        <ul className="space-y-1">
+      <div className="w-72 shrink-0">
+        <h3 className="text-base font-semibold text-slate-300 mb-3">Alarms</h3>
+        <ul className="space-y-2">
           {alarms.map((a) => (
             <li key={a.id}>
               <button
                 onClick={() => selectAlarm(a.id)}
-                className={`w-full text-left px-3 py-2 rounded text-sm ${
+                className={`w-full text-left px-3 py-2.5 rounded-lg text-base transition-colors ${
                   selected?.alert_id === a.id
                     ? "bg-slate-700"
                     : "bg-slate-800 hover:bg-slate-700"
                 }`}
               >
                 <div className="flex justify-between items-center">
-                  <span>{a.rule_id}</span>
+                  <span className="font-medium">{a.rule_id}</span>
                   <SeverityBadge severity={a.severity} />
                 </div>
-                <div className="text-xs text-slate-500 mt-1">
+                <div className="text-sm text-slate-500 mt-1 font-mono">
                   {a.source} → {a.destination}
                 </div>
               </button>
@@ -54,35 +53,30 @@ export function CorrelationPage() {
         </ul>
       </div>
 
-      {/* Desna strana: graf */}
       <div className="flex-1">
         {selected === null ? (
-          <p className="text-slate-400">
-            Izaberite alarm levo da vidite procesni kontekst.
+          <p className="text-slate-400 text-base">
+            Select an alarm on the left to view its process context.
           </p>
         ) : (
           <div>
             <div className="mb-4">
               <div className="flex items-center gap-3">
                 <SeverityBadge severity={selected.severity} />
-                <span className="text-lg font-semibold">
-                  {selected.rule_id}
-                </span>
+                <span className="text-xl font-semibold">{selected.rule_id}</span>
               </div>
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="text-base text-slate-400 mt-1 font-mono">
                 {selected.source} → {selected.destination} ·{" "}
-                {new Date(selected.alert_timestamp).toLocaleTimeString("sr-RS", {
-                  hour12: false,
-                })}
+                {new Date(selected.alert_timestamp).toLocaleTimeString("en-GB")}
               </p>
             </div>
             <CorrelationChart
               telemetry={selected.telemetry}
               alertTimestamp={selected.alert_timestamp}
             />
-            <p className="text-xs text-slate-500 mt-2">
-              Crvena linija označava trenutak neovlašćenog upisa. Ako se stanje
-              pumpe menja u tom trenutku, korelacija podiže ozbiljnost.
+            <p className="text-sm text-slate-500 mt-3">
+              The red line marks the moment of the unauthorized write. If a pump
+              state changes at that moment, correlation raises the severity.
             </p>
           </div>
         )}
