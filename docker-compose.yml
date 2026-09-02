@@ -98,6 +98,22 @@ services:
       otlab:
         ipv4_address: 192.168.10.50
 
+  # ---- Rogue simulator: napada PLC, HMI, SCADA ----
+  rogue-sim:
+    build:
+      context: .
+      dockerfile: attacker/Dockerfile
+    command: python -m attacker.attacks
+    environment:
+      PYTHONUNBUFFERED: "1"
+      TARGET_HOST: 192.168.10.10
+      ATTACK: all
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.99
+    profiles:
+      - attack
+
 networks:
   otlab:
     driver: bridge
