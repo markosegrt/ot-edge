@@ -69,3 +69,47 @@ class SqlSecurityEventRepository(SecurityEventRepository):
             if row:
                 row.occurrence_count += 1
                 session.commit()
+
+    def get_all_rows(self, limit: int = 200):
+        from edge.api.read_models import AlertRow
+        with SessionLocal() as session:
+            rows = (
+                session.query(SecurityEventORM)
+                .order_by(SecurityEventORM.timestamp.desc())
+                .limit(limit)
+                .all()
+            )
+            return [
+                AlertRow(
+                    id=r.id,
+                    timestamp=r.timestamp,
+                    rule_id=r.rule_id,
+                    severity=r.severity,
+                    source=r.source,
+                    destination=r.destination,
+                    protocol=r.protocol,
+                    correlated=r.correlated,
+                    occurrence_count=r.occurrence_count,
+                    extra=r.extra or {},
+                )
+                for r in rows
+            ]
+
+    def get_row_by_id(self, alert_id: int):
+        from edge.api.read_models import AlertRow
+        with SessionLocal() as session:
+            r = session.query(SecurityEventORM).filter(SecurityEventORM.id == alert_id).first()
+            if r is None:
+                return None
+            return AlertRow(
+                id=r.id,
+                timestamp=r.timestamp,
+                rule_id=r.rule_id,
+                severity=r.severity,
+                source=r.source,
+                destination=r.destination,
+                protocol=r.protocol,
+                correlated=r.correlated,
+                occurrence_count=r.occurrence_count,
+                extra=r.extra or {},
+            )

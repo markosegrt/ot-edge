@@ -115,7 +115,28 @@ services:
         ipv4_address: 192.168.10.99
     profiles:
       - attack
-
+  # ---- API: FastAPI, izlaze podatke frontu ----
+  api:
+    build:
+      context: .
+      dockerfile: edge/Dockerfile
+    command: uvicorn edge.api.main:app --host 0.0.0.0 --port 8000
+    environment:
+      PYTHONUNBUFFERED: "1"
+      DB_HOST: 192.168.10.40
+      DB_PORT: 5432
+      DB_USER: otedge
+      DB_PASSWORD: otedge
+      DB_NAME: otedge
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./edge:/app/edge
+    depends_on:
+      - db
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.60
 networks:
   otlab:
     driver: bridge
