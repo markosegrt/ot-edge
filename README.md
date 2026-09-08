@@ -32,3 +32,27 @@ The simulator and clients are configured via environment variables
 
 Docker Desktop (WSL2, Ubuntu). The full lab is brought up via
 `docker-compose.yml`.
+
+
+cd ~/ot-edge
+
+# 1. Digni sve kontejnere (lab + Edge + API + baza)
+docker compose up -d plant hmi-sim scada-sim db ot-edge api
+
+# 2. Sačekaj par sekundi da se svi podignu
+sleep 5
+
+# 3. Proveri da svi rade
+docker compose ps
+
+
+
+cd ~/ot-edge/dashboard
+npm run dev
+
+
+
+docker compose logs <ime> --tail 20
+
+
+curl http://localhost:8000/api/health

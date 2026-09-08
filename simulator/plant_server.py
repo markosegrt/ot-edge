@@ -15,6 +15,7 @@ from simulator.opcua_server import OpcUaSimulator
 
 
 TAKT_SEKUNDE = 0.1
+ISPIS_NA_TAKTOVA = 20
 
 
 class PlantServer:
@@ -25,10 +26,16 @@ class PlantServer:
 
     async def petlja_procesa(self):
         """Jedina petlja koja otkucava proces. Oba izloga citaju ovo stanje."""
+        takt = 0
         while True:
             self.modbus.procitaj_komande_iz_kutijica()
             self.postrojenje.korak()
             self.modbus.upisi_stanje_u_kutijice()
+
+            takt += 1
+            if takt % ISPIS_NA_TAKTOVA == 0:
+                print(self.postrojenje.prikazi(), flush=True)
+
             await asyncio.sleep(TAKT_SEKUNDE)
 
     async def pokreni(self):
@@ -38,7 +45,6 @@ class PlantServer:
 
         print("Plant server: jedan mozak, Modbus :502 + OPC UA :4840")
 
-        
         asyncio.create_task(self.modbus.pokreni_server())
         asyncio.create_task(self.opcua.pokreni_server())
 

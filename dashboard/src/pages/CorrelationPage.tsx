@@ -5,6 +5,7 @@ import type { Alert } from "../models/alert"
 import type { CorrelationContext } from "../models/correlation"
 import { SeverityBadge } from "../components/SeverityBadge"
 import { CorrelationChart } from "../components/CorrelationChart"
+import { explainCorrelation } from "../helpers/correlation_explain"
 
 export function CorrelationPage() {
   const [alarms, setAlarms] = useState<Alert[]>([])
@@ -24,6 +25,8 @@ export function CorrelationPage() {
   }
 
   if (error) return <p className="text-red-400 text-base">Error: {error}</p>
+
+  const explanation = selected ? explainCorrelation(selected) : null
 
   return (
     <div className="flex gap-6">
@@ -54,7 +57,7 @@ export function CorrelationPage() {
       </div>
 
       <div className="flex-1">
-        {selected === null ? (
+        {selected === null || explanation === null ? (
           <p className="text-slate-400 text-base">
             Select an alarm on the left to view its process context.
           </p>
@@ -70,13 +73,39 @@ export function CorrelationPage() {
                 {new Date(selected.alert_timestamp).toLocaleTimeString("en-GB")}
               </p>
             </div>
+
             <CorrelationChart
               telemetry={selected.telemetry}
               alertTimestamp={selected.alert_timestamp}
             />
-            <p className="text-sm text-slate-500 mt-3">
-              The red line marks the moment of the unauthorized write. If a pump
-              state changes at that moment, correlation raises the severity.
+
+            {/* Dinamicki zakljucak korelacije, izracunat iz telemetrije */}
+            <div
+              className={`mt-4 rounded-lg border p-4 ${
+                explanation.processChanged
+                  ? "border-red-500/40 bg-red-500/10"
+                  : "border-slate-600 bg-slate-800/40"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span
+                  className={`text-sm font-semibold ${
+                    explanation.processChanged ? "text-red-300" : "text-slate-300"
+                  }`}
+                >
+                  {explanation.processChanged
+                    ? "Process impact detected"
+                    : "No process impact"}
+                </span>
+              </div>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                {explanation.text}
+              </p>
+            </div>
+
+            <p className="text-xs text-slate-500 mt-3">
+              The red line marks the moment of the unauthorized write. Pump state
+              is shown on the right axis (ON/OFF); tank level on the left axis.
             </p>
           </div>
         )}

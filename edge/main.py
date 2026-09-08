@@ -26,7 +26,7 @@ from edge.helpers.baseline_loader import load_baseline
 from edge.helpers.rules_loader import load_rules
 
 
-async def main() -> None:
+def build_components():
     telemetry_repository = SqlTelemetryRepository()
     flow_repository = SqlFlowRepository()
     device_repository = SqlDeviceRepository()
@@ -42,47 +42,63 @@ async def main() -> None:
     event_processor: EventProcessor = BasicEventProcessor(
         normalizer, engine, correlator, device_repository, flow_repository, alert_repository, baseline
     )
+    return telemetry_repository, flow_repository, device_repository, inventory, event_processor
 
-    if settings.process_source == "file":
-        process_reader: ProcessReader = TelemetryFileReader(telemetry_repository)
-    else:
-        process_reader: ProcessReader = OpcUaReader(telemetry_repository)
 
-    if settings.network_source == "live":
-        network_reader: NetworkReader = LiveReader(
-            flow_repository, inventory, event_processor
-        )
-    else:
-        network_reader: NetworkReader = PcapReader(
-            flow_repository, inventory, event_processor
-        )
+async def run_measurement_once() -> None:
+    """Merni mod: jedan prolaz kroz snimak (telemetrija pa mreza), pa izlaz.
+    Koristi se za merenja iz eksperimentalnog dela (pusti isti pcap, izmeri)."""
+    telemetry_repository, flow_repository, device_repository, inventory, event_processor = build_components()
+    process_reader: ProcessReader = TelemetryFileReader(telemetry_repository)
+    network_reader: NetworkReader = PcapReader(flow_repository, inventory, event_processor)
 
-    if settings.process_source == "file" and settings.network_source == "pcap":
-        await process_reader.run()
-        # Meri samo obradu mreze (pcap -> tokovi -> pravila -> korelacija -> baza).
-        # Procesnu cev ne merimo jer je ona ucitavanje snimka, ne obrada.
-        start = time.perf_counter()
-        await asyncio.to_thread(network_reader.run)
-        elapsed = time.perf_counter() - start
-        _print_benchmark(elapsed)
+    await process_reader.run()
+    start = time.perf_counter()
+    await asyncio.to_thread(network_reader.run)
+    elapsed = time.perf_counter() - start
+    _print_benchmark(elapsed)
+
+
+async def run_live() -> None:
+    """Non-stop mod: Edge stalno radi.
+    - proces: OPC UA subscription cita PLC uzivo (ne izlazi)
+    - mreza: periodicno cita pcap koji tcpdump puni u pozadini
+    Oba zajedno preko asyncio.gather, tako da Edge non-stop nadzire."""
+    telemetry_repository, flow_repository, device_repository, inventory, event_processor = build_components()
+
+    process_reader: ProcessReader = OpcUaReader(telemetry_repository)
+
+    tasks = [process_reader.run()]
+
+    # Mrezni deo ukljucujemo samo ako je zadat (deo B). Za sad, u koraku A,
+    # ostavljamo ga iskljucenim dok ne dodamo periodicnu obradu pcap-a.
+    if settings.network_enabled:
+        network_reader: NetworkReader = PcapReader(flow_repository, inventory, event_processor)
+        tasks.append(asyncio.to_thread(_network_loop, network_reader))
+
+    print("Edge: non-stop mod pokrenut (proces uzivo preko OPC UA)")
+    await asyncio.gather(*tasks)
+
+
+def _network_loop(network_reader) -> None:
+    """Deo B: periodicno obradjuje pcap koji tcpdump puni. Dodajemo u sledecem koraku."""
+    import time as _time
+    while True:
+        network_reader.run()
+        _time.sleep(settings.network_interval_seconds)
+
+
+async def main() -> None:
+    if settings.run_mode == "measurement":
+        await run_measurement_once()
     else:
-        await asyncio.gather(
-            process_reader.run(),
-            asyncio.to_thread(network_reader.run),
-        )
+        await run_live()
 
 
 def _print_benchmark(elapsed_seconds: float) -> None:
-    """
-    Ispisuje merne pokazatelje obrade nakon jednog prolaza kroz pcap.
-    ru_maxrss je vrsna rezidentna memorija procesa (na Linux-u u kilobajtima).
-    ru_utime + ru_stime je ukupno CPU vreme (korisnicko + sistemsko).
-    Ove vrednosti se parsiraju iz benchmark skripte za prosek preko vise prolaza.
-    """
     usage = resource.getrusage(resource.RUSAGE_SELF)
     peak_mem_mb = usage.ru_maxrss / 1024.0
     cpu_seconds = usage.ru_utime + usage.ru_stime
-
     print("=== BENCHMARK ===")
     print(f"obrada_sekundi: {elapsed_seconds:.3f}")
     print(f"vrsna_memorija_mb: {peak_mem_mb:.1f}")

@@ -65,7 +65,7 @@ services:
       otlab:
         ipv4_address: 192.168.10.40
 
-  # ---- Edge: sniffi uzivo (deli plant namespace), cita OPC UA, primenjuje pravila ----
+  # ---- Edge: non-stop nadzor. Cita OPC UA proces uzivo, primenjuje pravila ----
   ot-edge:
     build:
       context: .
@@ -81,9 +81,11 @@ services:
       OPCUA_HOST: 192.168.10.10
       OPCUA_PORT: 4840
       OPCUA_PATH: /otedge/
+      RUN_MODE: live
+      PROCESS_SOURCE: live
+      NETWORK_ENABLED: "false"
       NETWORK_SOURCE: pcap
       PCAP_PATH: tests/pcaps/pair.pcap
-      PROCESS_SOURCE: file
       TELEMETRY_PATH: tests/telemetry/pair_telemetry.jsonl
       BASELINE_PATH: baseline.yaml
       RULES_PATH: rules.yaml
@@ -115,6 +117,7 @@ services:
         ipv4_address: 192.168.10.99
     profiles:
       - attack
+
   # ---- API: FastAPI, izlaze podatke frontu ----
   api:
     build:
@@ -137,6 +140,7 @@ services:
     networks:
       otlab:
         ipv4_address: 192.168.10.60
+
 networks:
   otlab:
     driver: bridge

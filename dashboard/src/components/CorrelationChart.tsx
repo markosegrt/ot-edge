@@ -16,12 +16,10 @@ interface Props {
   alertTimestamp: string
 }
 
-// Tagovi na LEVOJ osi (kontinualne vrednosti)
 const LEVEL_TAGS: Record<string, string> = {
   "Rezervoar.Nivo": "#22c55e",
 }
 
-// Tagovi na DESNOJ osi (0/1 stanja pumpi)
 const STATE_TAGS: Record<string, string> = {
   "Pumpa1.Radi": "#3b82f6",
   "Pumpa2.Radi": "#8b5cf6",
@@ -29,7 +27,6 @@ const STATE_TAGS: Record<string, string> = {
 
 export function CorrelationChart({ telemetry, alertTimestamp }: Props) {
   const byTime = new Map<number, Record<string, number>>()
-
   for (const point of telemetry) {
     const t = new Date(point.timestamp).getTime()
     if (!byTime.has(t)) byTime.set(t, { t })
@@ -38,6 +35,10 @@ export function CorrelationChart({ telemetry, alertTimestamp }: Props) {
 
   const data = Array.from(byTime.values()).sort((a, b) => a.t - b.t)
   const alertT = new Date(alertTimestamp).getTime()
+
+  const times = data.map((d) => d.t as number)
+  const minT = Math.min(alertT, ...(times.length ? times : [alertT]))
+  const maxT = Math.max(alertT, ...(times.length ? times : [alertT]))
 
   const formatTime = (t: number) =>
     new Date(t).toLocaleTimeString("sr-RS", { hour12: false })
@@ -51,16 +52,14 @@ export function CorrelationChart({ telemetry, alertTimestamp }: Props) {
           tickFormatter={formatTime}
           stroke="#94a3b8"
           type="number"
-          domain={["dataMin", "dataMax"]}
+          domain={[minT, maxT]}
         />
-        {/* Leva osa: nivo rezervoara (0-100) */}
         <YAxis yAxisId="level" stroke="#22c55e" domain={[0, 100]} />
-        {/* Desna osa: stanje pumpi (0-1) */}
         <YAxis
           yAxisId="state"
           orientation="right"
           stroke="#94a3b8"
-          domain={[0, 1.2]}
+          domain={[-0.1, 1.2]}
           ticks={[0, 1]}
           tickFormatter={(v) => (v === 1 ? "ON" : v === 0 ? "OFF" : "")}
         />
@@ -96,7 +95,7 @@ export function CorrelationChart({ telemetry, alertTimestamp }: Props) {
             dataKey={tag}
             stroke={color}
             strokeWidth={2}
-            dot={false}
+            dot={{ r: 3, fill: color }}
             connectNulls
             isAnimationActive={false}
           />

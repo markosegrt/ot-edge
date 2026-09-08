@@ -30,6 +30,10 @@ class Settings:
 
     CORRELATION_ENABLED: bool = os.getenv("CORRELATION_ENABLED", "true").lower() == "true"
 
+    RUN_MODE: str = os.getenv("RUN_MODE", "live")
+    NETWORK_ENABLED: bool = os.getenv("NETWORK_ENABLED", "false").lower() == "true"
+    NETWORK_INTERVAL_SECONDS: int = int(os.getenv("NETWORK_INTERVAL_SECONDS", "5"))
+
     @property
     def database_url(self) -> str:
         return (
@@ -72,4 +76,16 @@ class Settings:
     @property
     def correlation_enabled(self) -> bool:
         return self.CORRELATION_ENABLED
+    
+    @property
+    def run_mode(self) -> str:
+        return self.RUN_MODE
+
+    @property
+    def network_enabled(self) -> bool:
+        return self.NETWORK_ENABLED
+
+    @property
+    def network_interval_seconds(self) -> int:
+        return self.NETWORK_INTERVAL_SECONDS
 settings = Settings()
