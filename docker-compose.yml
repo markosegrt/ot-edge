@@ -27,8 +27,27 @@ services:
     networks:
       otlab:
         ipv4_address: 192.168.10.11
-        
-  # ---- HMI klijent: čita često, povremeno komanduje ----
+
+  # ---- SCADA: sredina lanca. Klijent ka oba PLC-a + ogledalo ka HMI ----
+  scada-sim:
+    build:
+      context: .
+      dockerfile: clients/Dockerfile
+    command: python -m clients.scada_proxy
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PLC1_HOST: 192.168.10.10
+      PLC2_HOST: 192.168.10.11
+      PLC_PORT: 502
+      IMAGE_PORT: 502
+    depends_on:
+      - plant
+      - plant2
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.30
+
+  # ---- HMI: cita I komanduje SAMO preko SCADA-e (nikad direktno PLC) ----
   hmi-sim:
     build:
       context: .
@@ -37,31 +56,14 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       PROFIL: hmi
-      MODBUS_HOST: 192.168.10.10
+      MODBUS_HOST: 192.168.10.30      # <-- SCADA, ne PLC
       MODBUS_PORT: 502
       HMI_VEROVATNOCA_KOMANDE: ${HMI_VEROVATNOCA_KOMANDE:-0.05}
     depends_on:
-      - plant
+      - scada-sim
     networks:
       otlab:
         ipv4_address: 192.168.10.20
-
-  # ---- SCADA klijent: čita ređe, širi opseg ----
-  scada-sim:
-    build:
-      context: .
-      dockerfile: clients/Dockerfile
-    command: python -m clients.modbus_client
-    environment:
-      PYTHONUNBUFFERED: "1"
-      PROFIL: scada
-      MODBUS_HOST: 192.168.10.10
-      MODBUS_PORT: 502
-    depends_on:
-      - plant
-    networks:
-      otlab:
-        ipv4_address: 192.168.10.30
 
   # ---- Baza: PostgreSQL 16 ----
   db:
