@@ -89,6 +89,49 @@ class Pritisak:
         return (f"Pritisak: {s.pritisak:5.1f} bar  |  "
                 f"Ventil: {ventil}{kvar}")
 
+    # ---------- Interfejs ProcessDevice (opis za genericke servere) ----------
+
+    def step(self, dt: float | None = None) -> None:
+        """Alias za korak() — ime iz interfejsa ProcessDevice."""
+        self.korak(dt)
+
+    def render(self) -> str:
+        """Alias za prikazi() — ime iz interfejsa ProcessDevice."""
+        return self.prikazi()
+
+    def coil_outputs(self) -> list[int]:
+        s = self.stanje
+        # redosled adresa: 0=ventil_otvoren, 1=kvar
+        return [int(s.ventil_otvoren), int(s.kvar)]
+
+    def register_outputs(self) -> list[int]:
+        s = self.stanje
+        # redosled adresa: 0=pritisak*10
+        return [int(s.pritisak * 10)]
+
+    def apply_coils(self, coils: list[int]) -> None:
+        # coil[0] -> ventil (1=otvori, 0=zatvori)
+        v = coils[0] if len(coils) > 0 else 0
+
+        if v and not self.stanje.ventil_otvoren:
+            self.otvori_ventil()
+        elif not v and self.stanje.ventil_otvoren:
+            self.zatvori_ventil()
+
+    def opcua_structure(self) -> dict:
+        # imena cvorova za drugi PLC — Edge ce se kasnije pretplatiti na njih
+        return {
+            "Ventil": [("Otvoren", True)],
+            "Cev": [("Pritisak", 0.0), ("Kvar", False)],
+        }
+
+    def opcua_values(self) -> dict:
+        s = self.stanje
+        return {
+            "Ventil": {"Otvoren": s.ventil_otvoren},
+            "Cev": {"Pritisak": float(s.pritisak), "Kvar": s.kvar},
+        }
+
 
 if __name__ == "__main__":
     p = Pritisak()

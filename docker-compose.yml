@@ -14,7 +14,20 @@ services:
     networks:
       otlab:
         ipv4_address: 192.168.10.10
-
+  # ---- Drugi PLC: regulacija pritiska (ventil/pritisak) ----
+  plant2:
+    build:
+      context: .
+      dockerfile: simulator/Dockerfile
+    command: python -m simulator.plant2_server
+    environment:
+      PYTHONUNBUFFERED: "1"
+      MODBUS_PORT: 502
+      OPCUA_PORT: 4840
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.11
+        
   # ---- HMI klijent: čita često, povremeno komanduje ----
   hmi-sim:
     build:

@@ -14,3 +14,8 @@ devices:
     name: "SCADA stanica"
     trusted: true
     can_write: false
+  - ip: 192.168.10.11
+    type: PLC
+    name: "PLC pritiska"
+    trusted: true
+    can_write: false
