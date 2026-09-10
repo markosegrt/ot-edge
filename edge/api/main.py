@@ -5,6 +5,7 @@ from edge.api.routes import alarms
 from edge.api.routes import correlation
 from edge.api.routes import devices
 from edge.api.routes import network
+from edge.api.routes import baseline
 
 app = FastAPI(title="OT Edge API")
 
@@ -14,6 +15,7 @@ app.include_router(alarms.router)
 app.include_router(correlation.router)
 app.include_router(devices.router)
 app.include_router(network.router)
+app.include_router(baseline.router)
 
 
 @app.get("/api/health")

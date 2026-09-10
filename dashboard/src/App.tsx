@@ -3,14 +3,16 @@ import { NetworkPage } from "./pages/NetworkPage"
 import { DevicesPage } from "./pages/DevicesPage"
 import { AlarmsPage } from "./pages/AlarmsPage"
 import { CorrelationPage } from "./pages/CorrelationPage"
+import { BaselinePage } from "./pages/BaselinePage"
 
-type Tab = "network" | "devices" | "alarms" | "correlation"
+type Tab = "network" | "devices" | "alarms" | "correlation" | "baseline"
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "network", label: "Network" },
   { id: "devices", label: "Devices" },
   { id: "alarms", label: "Alarms" },
   { id: "correlation", label: "Correlation" },
+  { id: "baseline", label: "Baseline" },
 ]
 
 function App() {
@@ -50,6 +52,7 @@ function App() {
         {tab === "devices" && <DevicesPage />}
         {tab === "alarms" && <AlarmsPage />}
         {tab === "correlation" && <CorrelationPage />}
+        {tab === "baseline" && <BaselinePage />}
       </main>
     </div>
   )

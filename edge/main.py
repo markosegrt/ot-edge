@@ -22,7 +22,7 @@ from edge.services.correlation.correlator import BasicCorrelator
 from edge.services.events.event_processor import BasicEventProcessor
 from edge.services.rules.rule_engine import RuleEngine
 from edge.services.rules.rule_factory import build_rules
-from edge.helpers.baseline_loader import load_baseline
+from edge.db.repositories.baseline_repository import SqlBaselineRepository
 from edge.helpers.rules_loader import load_rules
 
 
@@ -32,7 +32,8 @@ def build_components():
     device_repository = SqlDeviceRepository()
     alert_repository = SqlSecurityEventRepository()
 
-    baseline = load_baseline(settings.baseline_path)
+    baseline_repository = SqlBaselineRepository()
+    baseline = {d.ip: d for d in baseline_repository.get_all()}
     inventory: InventoryService = BasicInventoryService(device_repository, baseline)
 
     rules = build_rules(load_rules(settings.rules_path))
