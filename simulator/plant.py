@@ -140,6 +140,57 @@ class Postrojenje:
                 f"Pumpa1: {p1} ({s.pumpa1_brzina:.0f}Hz)  |  "
                 f"Pumpa2: {p2} ({s.pumpa2_brzina:.0f}Hz){kvar}")
 
+    # ---------- Interfejs ProcessDevice (opis za genericke servere) ----------
+
+    def step(self, dt: float | None = None) -> None:
+        """Alias za korak() — ime iz interfejsa ProcessDevice."""
+        self.korak(dt)
+
+    def render(self) -> str:
+        """Alias za prikazi() — ime iz interfejsa ProcessDevice."""
+        return self.prikazi()
+
+    def coil_outputs(self) -> list[int]:
+        s = self.stanje
+        # redosled adresa: 0=pumpa1, 1=pumpa2, 2=kvar
+        return [int(s.pumpa1_radi), int(s.pumpa2_radi), int(s.kvar)]
+
+    def register_outputs(self) -> list[int]:
+        s = self.stanje
+        # redosled adresa: 0=nivo*10, 1=pumpa1_brzina, 2=pumpa2_brzina
+        return [int(s.nivo * 10), int(s.pumpa1_brzina), int(s.pumpa2_brzina)]
+
+    def apply_coils(self, coils: list[int]) -> None:
+        # coil[0] -> pumpa1, coil[1] -> pumpa2
+        p1 = coils[0] if len(coils) > 0 else 0
+        p2 = coils[1] if len(coils) > 1 else 0
+
+        if p1 and not self.stanje.pumpa1_radi:
+            self.upali_pumpu1()
+        elif not p1 and self.stanje.pumpa1_radi:
+            self.ugasi_pumpu1()
+
+        if p2 and not self.stanje.pumpa2_radi:
+            self.upali_pumpu2()
+        elif not p2 and self.stanje.pumpa2_radi:
+            self.ugasi_pumpu2()
+
+    def opcua_structure(self) -> dict:
+        # imena cvorova MORAJU ostati ovakva — Edge se pretplacuje bas na njih
+        return {
+            "Pumpa1": [("Radi", False), ("Brzina", 0.0)],
+            "Pumpa2": [("Radi", False), ("Brzina", 0.0)],
+            "Rezervoar": [("Nivo", 0.0), ("Kvar", False)],
+        }
+
+    def opcua_values(self) -> dict:
+        s = self.stanje
+        return {
+            "Pumpa1": {"Radi": s.pumpa1_radi, "Brzina": float(s.pumpa1_brzina)},
+            "Pumpa2": {"Radi": s.pumpa2_radi, "Brzina": float(s.pumpa2_brzina)},
+            "Rezervoar": {"Nivo": float(s.nivo), "Kvar": s.kvar},
+        }
+
 
 # ---------- Provera: pokreni ovaj fajl direktno da vidis da mozak radi ----------
 if __name__ == "__main__":
