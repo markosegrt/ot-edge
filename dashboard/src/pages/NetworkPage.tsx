@@ -13,44 +13,50 @@ import { DeviceNode } from "../components/DeviceNode"
 
 const nodeTypes = { device: DeviceNode }
 
+const EDGE_IP = "192.168.10.50"
+
 export function NetworkPage() {
   const [data, setData] = useState<NetworkData | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     getNetwork().then(setData).catch((e) => setError(e.message))
-
     const interval = setInterval(() => {
       getNetwork().then(setData).catch((e) => setError(e.message))
     }, 5000)
-
     return () => clearInterval(interval)
   }, [])
 
   const { nodes, edges } = useMemo(() => {
     if (!data) return { nodes: [] as Node[], edges: [] as Edge[] }
 
-    const plc = data.nodes.find((n) => n.device_type === "PLC")
-    const others = data.nodes.filter((n) => n.device_type !== "PLC")
+    const visibleNodes = data.nodes.filter((n) => n.ip !== EDGE_IP)
+    const visibleLinks = data.links.filter(
+      (l) => l.source !== EDGE_IP && l.target !== EDGE_IP
+    )
+
+    const plcs = visibleNodes.filter((n) => n.device_type === "PLC")
+    const others = visibleNodes.filter((n) => n.device_type !== "PLC")
 
     const centerX = 500
     const centerY = 320
     const radius = 340
 
-    const nodes: Node[] = []
+    const resultNodes: Node[] = []
 
-    if (plc) {
-      nodes.push({
+    plcs.forEach((plc, i) => {
+      const offset = (i - (plcs.length - 1) / 2) * 160
+      resultNodes.push({
         id: plc.ip,
         type: "device",
-        position: { x: centerX, y: centerY },
+        position: { x: centerX, y: centerY + offset },
         data: { ip: plc.ip, deviceType: plc.device_type, status: plc.status },
       })
-    }
+    })
 
     others.forEach((n, i) => {
       const angle = (2 * Math.PI * i) / others.length - Math.PI / 2
-      nodes.push({
+      resultNodes.push({
         id: n.ip,
         type: "device",
         position: {
@@ -61,10 +67,16 @@ export function NetworkPage() {
       })
     })
 
-    const linkMap = new Map<string, { source: string; target: string; protocol: string; packets: number }>()
-    for (const l of data.links) {
+    type LinkAgg = {
+      source: string
+      target: string
+      protocol: string
+      packets: number
+    }
+    const linkMap = new Map<string, LinkAgg>()
+    for (const l of visibleLinks) {
       const pair = [l.source, l.target].sort()
-      const key = `${pair[0]}|${pair[1]}|${l.protocol}`
+      const key = pair[0] + "|" + pair[1] + "|" + l.protocol
       const existing = linkMap.get(key)
       if (existing) {
         existing.packets += l.packet_count
@@ -78,7 +90,7 @@ export function NetworkPage() {
       }
     }
 
-    const edges: Edge[] = Array.from(linkMap.values()).map((l, i) => ({
+    const resultEdges: Edge[] = Array.from(linkMap.values()).map((l, i) => ({
       id: `e-${i}`,
       source: l.source,
       target: l.target,
@@ -89,7 +101,7 @@ export function NetworkPage() {
       labelBgStyle: { fill: "#1e293b" },
     }))
 
-    return { nodes, edges }
+    return { nodes: resultNodes, edges: resultEdges }
   }, [data])
 
   if (error) return <p className="text-red-400 text-base">Error: {error}</p>

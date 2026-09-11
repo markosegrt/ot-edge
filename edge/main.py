@@ -36,7 +36,7 @@ def build_components():
     baseline = {d.ip: d for d in baseline_repository.get_all()}
     inventory: InventoryService = BasicInventoryService(device_repository, baseline)
 
-    rules = build_rules(load_rules(settings.rules_path))
+    rules = build_rules(load_rules(settings.rules_path), telemetry_repository)
     engine = RuleEngine(rules)
     normalizer = BasicNormalizer()
     correlator: Correlator = BasicCorrelator(telemetry_repository, settings.correlation_enabled)

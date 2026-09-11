@@ -96,6 +96,9 @@ services:
       OPCUA_HOST: 192.168.10.10
       OPCUA_PORT: 4840
       OPCUA_PATH: /otedge/
+      OPCUA_HOST_2: 192.168.10.11
+      OPCUA_PORT_2: 4840
+      OPCUA_PATH_2: /otedge/
       RUN_MODE: live
       PROCESS_SOURCE: live
       NETWORK_ENABLED: "false"

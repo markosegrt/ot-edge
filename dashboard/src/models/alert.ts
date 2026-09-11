@@ -8,4 +8,5 @@ export interface Alert {
   protocol: string
   correlated: boolean
   occurrence_count: number
+  rule_description?: string;
 }

@@ -26,43 +26,60 @@ class PcapReader(NetworkReader):
         self.inventory = inventory
         self.event_processor = event_processor
 
+    def _pcap_paths(self) -> list[str]:
+        """
+        Vraca listu pcap fajlova. settings.pcap_path moze biti:
+          - jedan fajl:   "tests/pcaps/pair.pcap"
+          - vise fajlova: "tests/pcaps/plc1.pcap,tests/pcaps/plc2.pcap,..."
+        Filteri pri snimanju garantuju da se paketi NE preklapaju izmedju
+        fajlova, pa ih samo ucitavamo sve u isti FlowBuilder.
+        """
+        raw = settings.pcap_path
+        return [p.strip() for p in raw.split(",") if p.strip()]
+
     def run(self) -> None:
-        packets = rdpcap(settings.pcap_path)
-        if not packets:
-            print("PcapReader: prazan pcap")
-            return
+        paths = self._pcap_paths()
 
         builder = FlowBuilder()
         write_events = []
+        total_packets = 0
 
-        for packet in packets:
-            if not packet.haslayer(IP) or not packet.haslayer(TCP):
-                continue
-            ip = packet[IP]
-            tcp = packet[TCP]
-            timestamp = datetime.fromtimestamp(float(packet.time), tz=timezone.utc)
+        for path in paths:
+            packets = rdpcap(path)
+            total_packets += len(packets)
 
-            builder.add_packet(
-                src_ip=ip.src,
-                dst_ip=ip.dst,
-                src_port=int(tcp.sport),
-                dst_port=int(tcp.dport),
-                size=len(packet),
-                timestamp=timestamp,
-            )
+            for packet in packets:
+                if not packet.haslayer(IP) or not packet.haslayer(TCP):
+                    continue
+                ip = packet[IP]
+                tcp = packet[TCP]
+                timestamp = datetime.fromtimestamp(float(packet.time), tz=timezone.utc)
 
-            if int(tcp.dport) == MODBUS_PORT and bytes(tcp.payload):
-                info = parse_modbus(bytes(tcp.payload))
-                if info is not None and info.is_write:
-                    write_events.append({
-                        "src_ip": ip.src,
-                        "dst_ip": ip.dst,
-                        "src_port": int(tcp.sport),
-                        "dst_port": int(tcp.dport),
-                        "function_code": info.function_code,
-                        "start_address": info.start_address,
-                        "timestamp": timestamp,
-                    })
+                builder.add_packet(
+                    src_ip=ip.src,
+                    dst_ip=ip.dst,
+                    src_port=int(tcp.sport),
+                    dst_port=int(tcp.dport),
+                    size=len(packet),
+                    timestamp=timestamp,
+                )
+
+                if int(tcp.dport) == MODBUS_PORT and bytes(tcp.payload):
+                    info = parse_modbus(bytes(tcp.payload))
+                    if info is not None and info.is_write:
+                        write_events.append({
+                            "src_ip": ip.src,
+                            "dst_ip": ip.dst,
+                            "src_port": int(tcp.sport),
+                            "dst_port": int(tcp.dport),
+                            "function_code": info.function_code,
+                            "start_address": info.start_address,
+                            "timestamp": timestamp,
+                        })
+
+        if total_packets == 0:
+            print("PcapReader: prazni pcap fajlovi")
+            return
 
         flows = builder.get_flows()
 
@@ -81,4 +98,7 @@ class PcapReader(NetworkReader):
         for we in write_events:
             self.event_processor.process_modbus_write(we)
 
-        print(f"PcapReader: procitano {len(packets)} paketa, {len(flows)} tokova, {len(write_events)} upisa")
+        print(
+            f"PcapReader: {len(paths)} fajl(ova), procitano {total_packets} paketa, "
+            f"{len(flows)} tokova, {len(write_events)} upisa"
+        )

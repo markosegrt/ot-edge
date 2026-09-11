@@ -13,6 +13,13 @@
   enabled: true
   severity: HIGH
 
+- id: RULE-004
+  name: traffic_flood
+  enabled: true
+  severity: MEDIUM
+  params:
+    packet_threshold: 300
+
 - id: RULE-006
   name: port_scan
   enabled: true
@@ -22,4 +29,13 @@
   name: unauthorized_modbus_write
   enabled: true
   severity: HIGH
+
+- id: RULE-008
+  name: dangerous_process_value
+  enabled: true
+  severity: MEDIUM
+  params:
+    thresholds:
+      Cev.Pritisak: 85.0
+      Rezervoar.Nivo: 95.0
 

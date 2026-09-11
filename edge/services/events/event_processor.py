@@ -85,14 +85,19 @@ class BasicEventProcessor(EventProcessor):
         devices_by_ip = {d.ip: d for d in devices}
 
         ports_by_source = {}
+        max_packets_by_source = {}
         flows = self.flow_repository.get_all()
         for flow in flows:
             ports_by_source.setdefault(flow.source_ip, set()).add(flow.destination_port)
+            current = max_packets_by_source.get(flow.source_ip, 0)
+            if flow.packet_count > current:
+                max_packets_by_source[flow.source_ip] = flow.packet_count
 
         return RuleContext(
             devices_by_ip=devices_by_ip,
             baseline_by_ip=self.baseline,
             ports_by_source=ports_by_source,
+            max_packets_by_source=max_packets_by_source,
         )
 
     def _store_with_dedup(self, alert) -> None:

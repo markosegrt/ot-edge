@@ -3,6 +3,7 @@ import { getAlarms } from "../api_services/alarms"
 import type { Alert } from "../models/alert"
 import { SeverityBadge } from "../components/SeverityBadge"
 import { Table, type Column } from "../components/Table"
+import { RULE_DESCRIPTIONS } from "../helpers/rule_explain"
 
 const columns: Column<Alert>[] = [
   {
@@ -14,6 +15,20 @@ const columns: Column<Alert>[] = [
     ),
   },
   { header: "Rule", cell: (a) => a.rule_id ?? "-" },
+  {
+    header: "Description",
+    cell: (a) => {
+      const desc = a.rule_id ? RULE_DESCRIPTIONS[a.rule_id] : "Unknown rule";
+      return (
+        <span 
+          className="text-slate-400 block max-w-xs truncate cursor-help" 
+          title={desc}
+        >
+          {desc || "-"}
+        </span>
+      );
+    }
+  },
   { header: "Severity", cell: (a) => <SeverityBadge severity={a.severity} /> },
   { header: "Source", cell: (a) => <span className="font-mono">{a.source}</span> },
   {

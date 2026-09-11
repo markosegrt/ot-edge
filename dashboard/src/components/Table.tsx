@@ -18,7 +18,7 @@ export function Table<T>({ columns, rows, rowKey, emptyText = "No data" }: Props
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-700">
+    <div className="overflow-auto max-h-[70vh] rounded-lg border border-slate-700">
       <table className="w-full text-base">
         <thead>
           <tr className="text-left text-slate-300 bg-slate-800/60">

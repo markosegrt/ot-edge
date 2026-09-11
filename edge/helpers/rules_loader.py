@@ -15,6 +15,7 @@ def load_rules(path: str) -> dict[str, RuleConfig]:
             name=entry["name"],
             enabled=entry.get("enabled", True),
             severity=Severity(entry["severity"]),
+            params=entry.get("params", {}),
         )
         result[config.rule_id] = config
     return result

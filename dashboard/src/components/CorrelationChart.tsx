@@ -16,21 +16,28 @@ interface Props {
   alertTimestamp: string
 }
 
-const LEVEL_TAGS: Record<string, string> = {
-  "Rezervoar.Nivo": "#22c55e",
+// Analogne vrednosti (leva osa, 0-100): nivo rezervoara ILI pritisak u cevi.
+const ANALOG_TAGS: Record<string, { color: string; label: string }> = {
+  "Rezervoar.Nivo": { color: "#22c55e", label: "Nivo (%)" },
+  "Cev.Pritisak": { color: "#f97316", label: "Pritisak (bar)" },
 }
 
-const STATE_TAGS: Record<string, string> = {
-  "Pumpa1.Radi": "#3b82f6",
-  "Pumpa2.Radi": "#8b5cf6",
+// Prekidacke vrednosti (desna osa, ON/OFF): pumpe ILI ventil.
+const STATE_TAGS: Record<string, { color: string; label: string }> = {
+  "Pumpa1.Radi": { color: "#3b82f6", label: "Pumpa1" },
+  "Pumpa2.Radi": { color: "#8b5cf6", label: "Pumpa2" },
+  "Ventil.Otvoren": { color: "#eab308", label: "Ventil" },
 }
 
 export function CorrelationChart({ telemetry, alertTimestamp }: Props) {
   const byTime = new Map<number, Record<string, number>>()
+  const presentTags = new Set<string>()
+
   for (const point of telemetry) {
     const t = new Date(point.timestamp).getTime()
     if (!byTime.has(t)) byTime.set(t, { t })
     byTime.get(t)![point.tag] = point.value
+    presentTags.add(point.tag)
   }
 
   const data = Array.from(byTime.values()).sort((a, b) => a.t - b.t)
@@ -43,9 +50,26 @@ export function CorrelationChart({ telemetry, alertTimestamp }: Props) {
   const formatTime = (t: number) =>
     new Date(t).toLocaleTimeString("sr-RS", { hour12: false })
 
+  // Crtamo SAMO tagove koji stvarno postoje u ovoj telemetriji.
+  // Tako grafik radi i za PLC1 (nivo/pumpe) i za PLC2 (pritisak/ventil).
+  const analogToDraw = Object.entries(ANALOG_TAGS).filter(([tag]) =>
+    presentTags.has(tag)
+  )
+  const stateToDraw = Object.entries(STATE_TAGS).filter(([tag]) =>
+    presentTags.has(tag)
+  )
+
+  if (data.length === 0) {
+    return (
+      <p className="text-slate-400 text-base py-8 text-center">
+        No process telemetry in the correlation window for this alarm.
+      </p>
+    )
+  }
+
   return (
     <ResponsiveContainer width="100%" height={360}>
-      <LineChart data={data} margin={{ top: 10, right: 40, left: 0, bottom: 0 }}>
+      <LineChart data={data} margin={{ top: 30, right: 40, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
         <XAxis
           dataKey="t"
@@ -54,7 +78,7 @@ export function CorrelationChart({ telemetry, alertTimestamp }: Props) {
           type="number"
           domain={[minT, maxT]}
         />
-        <YAxis yAxisId="level" stroke="#22c55e" domain={[0, 100]} />
+        <YAxis yAxisId="analog" stroke="#94a3b8" domain={[0, 100]} />
         <YAxis
           yAxisId="state"
           orientation="right"
@@ -69,33 +93,35 @@ export function CorrelationChart({ telemetry, alertTimestamp }: Props) {
         />
         <Legend />
         <ReferenceLine
-          yAxisId="level"
+          yAxisId="analog"
           x={alertT}
           stroke="#ef4444"
           strokeWidth={2}
           label={{ value: "Upis", fill: "#ef4444", position: "top" }}
         />
-        {Object.entries(LEVEL_TAGS).map(([tag, color]) => (
+        {analogToDraw.map(([tag, cfg]) => (
           <Line
             key={tag}
-            yAxisId="level"
-            type="stepAfter"
+            yAxisId="analog"
+            type="monotone"
             dataKey={tag}
-            stroke={color}
+            name={cfg.label}
+            stroke={cfg.color}
             dot={false}
             connectNulls
             isAnimationActive={false}
           />
         ))}
-        {Object.entries(STATE_TAGS).map(([tag, color]) => (
+        {stateToDraw.map(([tag, cfg]) => (
           <Line
             key={tag}
             yAxisId="state"
             type="stepAfter"
             dataKey={tag}
-            stroke={color}
+            name={cfg.label}
+            stroke={cfg.color}
             strokeWidth={2}
-            dot={{ r: 3, fill: color }}
+            dot={{ r: 3, fill: cfg.color }}
             connectNulls
             isAnimationActive={false}
           />

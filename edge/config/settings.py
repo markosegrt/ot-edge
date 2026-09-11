@@ -13,9 +13,13 @@ class Settings:
     DB_PORT: str = os.getenv("DB_PORT", "5432")
     DB_NAME: str = os.getenv("DB_NAME", "otedge")
 
-    OPCUA_HOST: str = os.getenv("OPCUA_HOST", "192.168.10.11")
+    OPCUA_HOST: str = os.getenv("OPCUA_HOST", "192.168.10.10")
     OPCUA_PORT: str = os.getenv("OPCUA_PORT", "4840")
     OPCUA_PATH: str = os.getenv("OPCUA_PATH", "/otedge/")
+
+    OPCUA_HOST_2: str = os.getenv("OPCUA_HOST_2", "192.168.10.11")
+    OPCUA_PORT_2: str = os.getenv("OPCUA_PORT_2", "4840")
+    OPCUA_PATH_2: str = os.getenv("OPCUA_PATH_2", "/otedge/")
 
     PCAP_PATH: str = os.getenv("PCAP_PATH", "tests/pcaps/lab_normal.pcap")
     BASELINE_PATH: str = os.getenv("BASELINE_PATH", "baseline.yaml")
@@ -45,6 +49,10 @@ class Settings:
     def opcua_url(self) -> str:
         return f"opc.tcp://{self.OPCUA_HOST}:{self.OPCUA_PORT}{self.OPCUA_PATH}"
 
+    @property
+    def opcua_url_2(self) -> str:
+        return f"opc.tcp://{self.OPCUA_HOST_2}:{self.OPCUA_PORT_2}{self.OPCUA_PATH_2}"
+    
     @property
     def pcap_path(self) -> str:
         return self.PCAP_PATH
