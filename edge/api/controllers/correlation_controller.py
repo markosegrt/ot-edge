@@ -6,6 +6,10 @@ from edge.db.repositories.security_event_repository import SqlSecurityEventRepos
 from edge.db.repositories.telemetry_repository import SqlTelemetryRepository
 
 WINDOW_SECONDS = 5
+# Sabotaza ima odlozenu posledicu (pritisak raste par sekundi posle upisa),
+# pa prozor prikaza gledamo SIRE UNAPRED da grafik uhvati skok — isto kao
+# lookahead u korelatoru.
+LOOKAHEAD_SECONDS = 15
 
 
 class TelemetryPointResponse(BaseModel):
@@ -37,9 +41,8 @@ class CorrelationController:
         if alert is None:
             return None
 
-        window = timedelta(seconds=WINDOW_SECONDS)
-        start = alert.timestamp - window
-        end = alert.timestamp + window
+        start = alert.timestamp - timedelta(seconds=WINDOW_SECONDS)
+        end = alert.timestamp + timedelta(seconds=LOOKAHEAD_SECONDS)
 
         telemetry = self.telemetry_repository.get_between(start, end)
 

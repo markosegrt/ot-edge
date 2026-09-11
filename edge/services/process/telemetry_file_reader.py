@@ -24,6 +24,7 @@ class TelemetryFileReader(ProcessReader):
                 telemetry = Telemetry(
                     timestamp=datetime.fromisoformat(record["timestamp"]),
                     device=record["device"],
+                    device_ip=record.get("device_ip", ""),
                     tag=record["tag"],
                     value=float(record["value"]),
                     unit=record["unit"],

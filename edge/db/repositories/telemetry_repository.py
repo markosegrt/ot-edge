@@ -21,6 +21,7 @@ class SqlTelemetryRepository(TelemetryRepository):
         return ProcessTelemetryORM(
             timestamp=telemetry.timestamp,
             device_name=telemetry.device,
+            device_ip=telemetry.device_ip,
             tag=telemetry.tag,
             value=telemetry.value,
             unit=telemetry.unit,
@@ -31,6 +32,7 @@ class SqlTelemetryRepository(TelemetryRepository):
         return Telemetry(
             timestamp=row.timestamp,
             device=row.device_name,
+            device_ip=row.device_ip or "",
             tag=row.tag,
             value=row.value,
             unit=row.unit,

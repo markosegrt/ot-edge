@@ -39,6 +39,7 @@ class PcapReader(NetworkReader):
 
     def run(self) -> None:
         paths = self._pcap_paths()
+        edge_ip = settings.edge_ip
 
         builder = FlowBuilder()
         write_events = []
@@ -53,6 +54,13 @@ class PcapReader(NetworkReader):
                     continue
                 ip = packet[IP]
                 tcp = packet[TCP]
+
+                # Edge (sniffer) je posmatrac — njegov OPC UA saobracaj ka PLC-u
+                # nije deo osmotrene mreze. Preskacemo ga na ulazu da ne pravi
+                # lazne uredjaje/alarme (RULE-002/003 na .50).
+                if ip.src == edge_ip or ip.dst == edge_ip:
+                    continue
+
                 timestamp = datetime.fromtimestamp(float(packet.time), tz=timezone.utc)
 
                 builder.add_packet(

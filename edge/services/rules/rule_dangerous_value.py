@@ -53,8 +53,8 @@ class DangerousValueRule(Rule):
                     rule_id=self.rule_id,
                     severity=self.severity,
                     event_type=EventType.PROCESS,
-                    source=t.device,
-                    destination=t.device,
+                    source=t.device_ip or t.device,
+                    destination=t.device_ip or t.device,
                     device=t.device,
                     protocol=Protocol.OPCUA,
                     extra={

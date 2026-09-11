@@ -18,6 +18,9 @@ class BasicInventoryService(InventoryService):
 
     def observe_flow(self, flow: Flow) -> None:
         now = datetime.now(timezone.utc)
+        edge_ip = settings.edge_ip
+        if flow.source_ip == edge_ip or flow.destination_ip == edge_ip:
+            return
         self._observe_device(flow.source_ip, listening_port=None, seen_at=now)
         self._observe_device(flow.destination_ip, listening_port=flow.destination_port, seen_at=now)
 

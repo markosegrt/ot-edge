@@ -13,6 +13,7 @@ class ProcessTelemetryORM(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     device_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("devices.id"), nullable=True)
     device_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    device_ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
     tag: Mapped[str] = mapped_column(String(100), nullable=False)
     value: Mapped[float] = mapped_column(Float, nullable=False)
     unit: Mapped[str | None] = mapped_column(String(20), nullable=True)

@@ -1,7 +1,9 @@
+# edge/tools/record_telemetry.py
 import asyncio
 import json
 import os
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from asyncua import Client
 
@@ -27,11 +29,14 @@ PLC2_TAGS = [
 ]
 
 
-class RecordHandler:
-    """Jedan handler po PLC-u. Pise u ISTI fajl (deljeni), sa svojim device imenom."""
+def _host_from_url(url: str) -> str:
+    return urlparse(url).hostname or ""
 
-    def __init__(self, device_name, tag_index, output_file):
+
+class RecordHandler:
+    def __init__(self, device_name, device_ip, tag_index, output_file):
         self.device_name = device_name
+        self.device_ip = device_ip
         self.tag_index = tag_index
         self.output_file = output_file
 
@@ -40,6 +45,7 @@ class RecordHandler:
         record = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "device": self.device_name,
+            "device_ip": self.device_ip,
             "tag": tag,
             "value": self._to_float(value),
             "unit": unit,
@@ -54,8 +60,7 @@ class RecordHandler:
         return float(raw)
 
 
-async def record_plc(url, device_name, tags, output_file):
-    """Snima jedan PLC. Nezavisno — reconnect ako padne."""
+async def record_plc(url, device_name, device_ip, tags, output_file):
     while True:
         try:
             async with Client(url=url) as client:
@@ -64,12 +69,12 @@ async def record_plc(url, device_name, tags, output_file):
                     node = await client.nodes.root.get_child(path)
                     tag_index[node] = (tag, unit)
 
-                handler = RecordHandler(device_name, tag_index, output_file)
+                handler = RecordHandler(device_name, device_ip, tag_index, output_file)
                 subscription = await client.create_subscription(
                     PUBLISHING_INTERVAL_MS, handler
                 )
                 await subscription.subscribe_data_change(list(tag_index.keys()))
-                print(f"Snimam [{device_name}] preko {url}", flush=True)
+                print(f"Snimam [{device_name} / {device_ip}] preko {url}", flush=True)
                 while True:
                     await asyncio.sleep(1)
         except Exception as e:
@@ -82,11 +87,17 @@ async def main():
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         tasks = [
-            record_plc(settings.opcua_url, "PLC-01", PLC1_TAGS, f),
+            record_plc(
+                settings.opcua_url, "PLC-01",
+                _host_from_url(settings.opcua_url), PLC1_TAGS, f
+            ),
         ]
         if settings.OPCUA_HOST_2:
             tasks.append(
-                record_plc(settings.opcua_url_2, "PLC-02", PLC2_TAGS, f)
+                record_plc(
+                    settings.opcua_url_2, "PLC-02",
+                    _host_from_url(settings.opcua_url_2), PLC2_TAGS, f
+                )
             )
         print(f"Snimam telemetriju oba PLC-a u {OUTPUT_PATH}")
         await asyncio.gather(*tasks)

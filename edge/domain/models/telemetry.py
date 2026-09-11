@@ -8,6 +8,7 @@ from edge.domain.enums.quality import Quality
 class Telemetry:
     timestamp: datetime
     device: str
+    device_ip: str
     tag: str
     value: float
     unit: str

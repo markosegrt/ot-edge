@@ -1,4 +1,3 @@
-# edge/config/settings.py
 import os
 
 from dotenv import load_dotenv
@@ -17,9 +16,13 @@ class Settings:
     OPCUA_PORT: str = os.getenv("OPCUA_PORT", "4840")
     OPCUA_PATH: str = os.getenv("OPCUA_PATH", "/otedge/")
 
+    # Drugi PLC (ventil/pritisak). Prazan host = ne citaj drugi PLC.
     OPCUA_HOST_2: str = os.getenv("OPCUA_HOST_2", "192.168.10.11")
     OPCUA_PORT_2: str = os.getenv("OPCUA_PORT_2", "4840")
     OPCUA_PATH_2: str = os.getenv("OPCUA_PATH_2", "/otedge/")
+
+    # Edge sopstveni IP (sniffer) — inventar ga ignorise da ne pravi lazne alarme.
+    EDGE_IP: str = os.getenv("EDGE_IP", "192.168.10.50")
 
     PCAP_PATH: str = os.getenv("PCAP_PATH", "tests/pcaps/lab_normal.pcap")
     BASELINE_PATH: str = os.getenv("BASELINE_PATH", "baseline.yaml")
@@ -52,7 +55,7 @@ class Settings:
     @property
     def opcua_url_2(self) -> str:
         return f"opc.tcp://{self.OPCUA_HOST_2}:{self.OPCUA_PORT_2}{self.OPCUA_PATH_2}"
-    
+
     @property
     def pcap_path(self) -> str:
         return self.PCAP_PATH
@@ -68,7 +71,7 @@ class Settings:
     @property
     def unavailable_threshold_seconds(self) -> int:
         return self.UNAVAILABLE_THRESHOLD_SECONDS
-    
+
     @property
     def network_source(self) -> str:
         return self.NETWORK_SOURCE
@@ -84,7 +87,7 @@ class Settings:
     @property
     def correlation_enabled(self) -> bool:
         return self.CORRELATION_ENABLED
-    
+
     @property
     def run_mode(self) -> str:
         return self.RUN_MODE
@@ -96,4 +99,10 @@ class Settings:
     @property
     def network_interval_seconds(self) -> int:
         return self.NETWORK_INTERVAL_SECONDS
+
+    @property
+    def edge_ip(self) -> str:
+        return self.EDGE_IP
+
+
 settings = Settings()
