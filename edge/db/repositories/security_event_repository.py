@@ -10,11 +10,12 @@ from edge.db.orm.security_event import SecurityEventORM
 
 
 class SqlSecurityEventRepository(SecurityEventRepository):
-    def save(self, alert: SecurityAlert) -> None:
+    def save(self, alert: SecurityAlert) -> int:
         with SessionLocal() as session:
             row = self._to_orm(alert)
             session.add(row)
             session.commit()
+            return row.id
 
     def get_all(self) -> list[SecurityAlert]:
         with SessionLocal() as session:

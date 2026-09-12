@@ -10,3 +10,8 @@ class CorrelationResult:
     final_severity: Severity
     correlated: bool
     details: dict[str, Any] = field(default_factory=dict)
+    pattern: str | None = None            
+    base_severity: Severity | None = None  
+    network_summary: str | None = None     
+    process_summary: str | None = None     
+    link_summary: str | None = None        

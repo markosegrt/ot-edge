@@ -6,7 +6,7 @@ from edge.domain.models.security_alert import SecurityAlert
 
 class SecurityEventRepository(ABC):
     @abstractmethod
-    def save(self, alert: SecurityAlert) -> None:
+    def save(self, alert: SecurityAlert) -> int:
         ...
 
     @abstractmethod

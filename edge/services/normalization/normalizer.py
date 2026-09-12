@@ -20,6 +20,8 @@ class BasicNormalizer(Normalizer):
                 "destination_port": flow.destination_port,
                 "packet_count": flow.packet_count,
                 "byte_count": flow.byte_count,
+                "flow_first_seen": flow.first_seen.isoformat(),
+                "flow_last_seen": flow.last_seen.isoformat(),
             },
         )
 

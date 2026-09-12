@@ -8,6 +8,7 @@ from edge.domain.models.baseline_device import BaselineDevice
 from edge.domain.models.device import Device
 from edge.domain.models.flow import Flow
 from edge.domain.models.security_alert import SecurityAlert
+from edge.domain.models.correlation import Correlation
 from edge.domain.repositories.device_repository import DeviceRepository
 from edge.domain.repositories.security_event_repository import SecurityEventRepository
 from edge.domain.services.event_processor import EventProcessor
@@ -16,6 +17,8 @@ from edge.domain.services.correlator import Correlator
 from edge.domain.services.rule_context import RuleContext
 from edge.services.rules.rule_engine import RuleEngine
 from edge.domain.repositories.flow_repository import FlowRepository
+from edge.db.repositories.correlation_repository import SqlCorrelationRepository
+
 
 class BasicEventProcessor(EventProcessor):
     def __init__(
@@ -35,6 +38,7 @@ class BasicEventProcessor(EventProcessor):
         self.flow_repository = flow_repository
         self.alert_repository = alert_repository
         self.baseline = baseline
+        self.correlation_repository = SqlCorrelationRepository()
 
     def process_flow(self, flow: Flow) -> None:
         event = self.normalizer.from_flow(flow)
@@ -69,8 +73,6 @@ class BasicEventProcessor(EventProcessor):
         self.alert_repository.save(alert)
 
     def _evaluate_and_store(self, event) -> None:
-        from datetime import timedelta
-
         context = self._build_context()
         alerts = self.engine.evaluate(event, context)
         for alert in alerts:
@@ -78,7 +80,7 @@ class BasicEventProcessor(EventProcessor):
             alert.severity = result.final_severity
             alert.correlated = result.correlated
             alert.extra["correlation"] = result.details
-            self._store_with_dedup(alert)
+            self._store_with_dedup(alert, result)
 
     def _build_context(self) -> RuleContext:
         devices = self.device_repository.get_all()
@@ -100,7 +102,7 @@ class BasicEventProcessor(EventProcessor):
             max_packets_by_source=max_packets_by_source,
         )
 
-    def _store_with_dedup(self, alert) -> None:
+    def _store_with_dedup(self, alert, result) -> None:
         from datetime import timedelta
 
         window_start = alert.timestamp - timedelta(seconds=60)
@@ -112,5 +114,19 @@ class BasicEventProcessor(EventProcessor):
         )
         if duplicate_id is not None:
             self.alert_repository.increment_occurrence(duplicate_id)
-        else:
-            self.alert_repository.save(alert)
+            return
+
+        event_id = self.alert_repository.save(alert)
+
+        if result.pattern is not None:
+            correlation = Correlation(
+                event_id=event_id,
+                pattern=result.pattern,
+                base_severity=result.base_severity.value if result.base_severity else alert.severity.value,
+                final_severity=result.final_severity.value,
+                network_summary=result.network_summary,
+                process_summary=result.process_summary,
+                link_summary=result.link_summary,
+                created_at=datetime.now(timezone.utc),
+            )
+            self.correlation_repository.save(correlation)

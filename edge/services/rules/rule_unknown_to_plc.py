@@ -36,5 +36,10 @@ class UnknownToPlcRule(Rule):
             destination=event.destination,
             device=event.device,
             protocol=event.protocol,
-            extra={"reason": "unknown_device_to_plc", "source_ip": event.source},
+            extra={
+                "reason": "unknown_device_to_plc",
+                "source_ip": event.source,
+                "flow_first_seen": event.extra.get("flow_first_seen"),
+                "flow_last_seen": event.extra.get("flow_last_seen"),
+            },
         )
