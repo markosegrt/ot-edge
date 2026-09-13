@@ -6,6 +6,7 @@ interface DeviceNodeData {
   deviceType: string
   status: string
   name?: string | null
+  suspicious?: boolean
 }
 
 function iconFor(deviceType: string) {
@@ -35,11 +36,15 @@ function statusColor(status: string) {
 }
 
 export function DeviceNode({ data }: { data: DeviceNodeData }) {
-  // Naslov: ime iz baseline-a ako postoji, inace tip uredjaja.
   const title = data.name || data.deviceType
 
+
+  const borderClass = data.suspicious
+    ? "border-red-500"
+    : "border-slate-600"
+
   return (
-    <div className="bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-3 shadow-lg min-w-[160px]">
+    <div className={`bg-slate-800 border-2 ${borderClass} rounded-xl px-4 py-3 shadow-lg min-w-[160px]`}>
       <Handle type="target" position={Position.Top} className="opacity-0" />
       <Handle type="source" position={Position.Bottom} className="opacity-0" />
       <Handle type="target" position={Position.Left} className="opacity-0" />

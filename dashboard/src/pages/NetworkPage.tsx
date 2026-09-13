@@ -65,6 +65,7 @@ export function NetworkPage() {
             deviceType: n.device_type,
             status: n.status,
             name: n.name,
+            suspicious: n.suspicious,
           },
         })
       })
@@ -85,6 +86,7 @@ export function NetworkPage() {
           deviceType: n.device_type,
           status: n.status,
           name: n.name,
+          suspicious: n.suspicious,
         },
       })
     })
@@ -145,7 +147,7 @@ export function NetworkPage() {
       </div>
       <p className="text-sm text-slate-500 mt-3">
         Each node is a discovered device. Lines show which devices communicate
-        and over which protocol. Unknown devices are highlighted in yellow.
+        and over which protocol. Suspicious (untrusted) devices are outlined in red.
       </p>
     </div>
   )

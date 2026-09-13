@@ -18,16 +18,9 @@ const columns: Column<Alert>[] = [
   {
     header: "Description",
     cell: (a) => {
-      const desc = a.rule_id ? RULE_DESCRIPTIONS[a.rule_id] : "Unknown rule";
-      return (
-        <span 
-          className="text-slate-400 block max-w-xs truncate cursor-help" 
-          title={desc}
-        >
-          {desc || "-"}
-        </span>
-      );
-    }
+      const desc = a.rule_id ? RULE_DESCRIPTIONS[a.rule_id] : "Unknown rule"
+      return <span className="text-slate-400">{desc || "-"}</span>
+    },
   },
   { header: "Severity", cell: (a) => <SeverityBadge severity={a.severity} /> },
   { header: "Source", cell: (a) => <span className="font-mono">{a.source}</span> },

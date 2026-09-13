@@ -3,6 +3,7 @@ export interface NetworkNode {
   device_type: string
   status: string
   name: string | null
+  suspicious: boolean
 }
 
 export interface NetworkLink {

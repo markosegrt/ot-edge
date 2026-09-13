@@ -56,3 +56,19 @@ docker compose logs <ime> --tail 20
 
 
 curl http://localhost:8000/api/health
+
+
+
+# SNIMANJE RADA SAOBRACAJA
+***
+
+# TESTIRANJE
+DOBAR SCENARIO
+sed -i 's/\r$//' scripts/test1.sh
+chmod +x scripts/test1.sh
+./scripts/test1.sh
+
+LOS SCENARIO
+sed -i 's/\r$//' scripts/test2.sh
+chmod +x scripts/test2.sh
+./scripts/test2.sh

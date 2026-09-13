@@ -5,7 +5,7 @@ export function severityColor(severity: string): string {
     case "HIGH":
       return "bg-orange-500 text-white"
     case "MEDIUM":
-      return "bg-yellow-500 text-black"
+      return "bg-yellow-600 text-white"
     case "LOW":
       return "bg-blue-500 text-white"
     case "INFO":

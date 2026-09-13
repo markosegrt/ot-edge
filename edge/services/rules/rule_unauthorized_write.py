@@ -16,7 +16,9 @@ class UnauthorizedWriteRule(Rule):
             return None
 
         baseline = context.baseline_by_ip.get(event.source)
-        source_may_write = baseline is not None and baseline.can_write
+        source_may_write = (
+            baseline is not None and baseline.trusted and baseline.can_write
+        )
         if source_may_write:
             return None
 

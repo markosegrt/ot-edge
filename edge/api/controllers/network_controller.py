@@ -10,6 +10,7 @@ class NetworkNode(BaseModel):
     device_type: str
     status: str
     name: str | None
+    suspicious: bool
 
 
 class NetworkLink(BaseModel):
@@ -63,12 +64,15 @@ class NetworkController:
 
             status = device.status.value if device else "NEW"
 
+            suspicious = (known is None) or (not known.trusted)
+
             nodes.append(
                 NetworkNode(
                     ip=ip,
                     device_type=device_type,
                     status=status,
                     name=name,
+                    suspicious=suspicious,
                 )
             )
 

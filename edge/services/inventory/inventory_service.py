@@ -39,7 +39,7 @@ class BasicInventoryService(InventoryService):
     def _create_device(self, ip: str, listening_port: int | None, seen_at: datetime) -> Device:
         known = self.baseline.get(ip)
 
-        if known is not None:
+        if known is not None and known.trusted:
             return Device(
                 ip=ip,
                 mac=None,
@@ -52,7 +52,9 @@ class BasicInventoryService(InventoryService):
             )
 
         device_type = DeviceType.UNKNOWN
-        if listening_port is not None:
+        if known is not None:
+            device_type = known.device_type
+        elif listening_port is not None:
             device_type = classify_by_ports({listening_port})
 
         return Device(
