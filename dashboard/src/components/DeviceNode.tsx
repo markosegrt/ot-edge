@@ -5,6 +5,7 @@ interface DeviceNodeData {
   ip: string
   deviceType: string
   status: string
+  name?: string | null
 }
 
 function iconFor(deviceType: string) {
@@ -34,9 +35,11 @@ function statusColor(status: string) {
 }
 
 export function DeviceNode({ data }: { data: DeviceNodeData }) {
+  // Naslov: ime iz baseline-a ako postoji, inace tip uredjaja.
+  const title = data.name || data.deviceType
+
   return (
     <div className="bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-3 shadow-lg min-w-[160px]">
-      {/* Handle-ovi su tacke za koje se kace linije. Nevidljivi ali potrebni. */}
       <Handle type="target" position={Position.Top} className="opacity-0" />
       <Handle type="source" position={Position.Bottom} className="opacity-0" />
       <Handle type="target" position={Position.Left} className="opacity-0" />
@@ -45,7 +48,7 @@ export function DeviceNode({ data }: { data: DeviceNodeData }) {
       <div className="flex items-center gap-3">
         {iconFor(data.deviceType)}
         <div>
-          <div className="font-semibold text-base">{data.deviceType}</div>
+          <div className="font-semibold text-base">{title}</div>
           <div className="font-mono text-sm text-slate-400">{data.ip}</div>
         </div>
       </div>

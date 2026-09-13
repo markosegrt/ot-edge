@@ -2,6 +2,7 @@ export interface NetworkNode {
   ip: string
   device_type: string
   status: string
+  name: string | null
 }
 
 export interface NetworkLink {

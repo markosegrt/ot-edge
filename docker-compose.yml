@@ -59,12 +59,35 @@ services:
       MODBUS_HOST: 192.168.10.30      # <-- SCADA, ne PLC
       MODBUS_PORT: 502
       HMI_VEROVATNOCA_KOMANDE: ${HMI_VEROVATNOCA_KOMANDE:-0.05}
+      HMI_MODE: ${HMI_MODE:-random}
     depends_on:
       - scada-sim
     networks:
       otlab:
         ipv4_address: 192.168.10.20
 
+
+  # ---- Nov legitiman uredjaj (za mirni scenario) — drugi HMI koji se javi ----
+  # Pokrece se SAMO rucno/u calm skripti (profil newdevice), izaziva RULE-001 INFO.
+  newdevice-sim:
+    build:
+      context: .
+      dockerfile: clients/Dockerfile
+    command: python -m clients.modbus_client
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PROFIL: hmi
+      MODBUS_HOST: 192.168.10.30
+      MODBUS_PORT: 502
+      HMI_MODE: random
+      HMI_VEROVATNOCA_KOMANDE: "0"
+    networks:
+      otlab:
+        ipv4_address: 192.168.10.21
+    profiles:
+      - calm
+
+      
   # ---- Baza: PostgreSQL 16 ----
   db:
     image: postgres:16

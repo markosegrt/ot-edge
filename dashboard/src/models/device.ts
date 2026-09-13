@@ -4,6 +4,7 @@ export interface Device {
   device_type: string
   status: string
   vendor: string | null
+  name: string | null
   first_seen: string
   last_seen: string
 }

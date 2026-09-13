@@ -35,35 +35,57 @@ export function NetworkPage() {
       (l) => l.source !== EDGE_IP && l.target !== EDGE_IP
     )
 
+    // Rasporedjujemo po ULOZI u lancu, ne genericki, da se vidi
+    // hijerarhija HMI (gore) -> SCADA (sredina) -> PLC-ovi (dole).
+    const hmis = visibleNodes.filter((n) => n.device_type === "HMI")
+    const scadas = visibleNodes.filter((n) => n.device_type === "SCADA")
     const plcs = visibleNodes.filter((n) => n.device_type === "PLC")
-    const others = visibleNodes.filter((n) => n.device_type !== "PLC")
+    const rest = visibleNodes.filter(
+      (n) => !["HMI", "SCADA", "PLC"].includes(n.device_type)
+    )
 
     const centerX = 500
-    const centerY = 320
-    const radius = 340
+    const yTop = 60      // HMI red
+    const yMid = 300     // SCADA red
+    const yBottom = 540  // PLC red
+    const spread = 200   // horizontalni razmak izmedju cvorova u istom redu
 
     const resultNodes: Node[] = []
 
-    plcs.forEach((plc, i) => {
-      const offset = (i - (plcs.length - 1) / 2) * 160
-      resultNodes.push({
-        id: plc.ip,
-        type: "device",
-        position: { x: centerX, y: centerY + offset },
-        data: { ip: plc.ip, deviceType: plc.device_type, status: plc.status },
+    // Pomocna: rasporedi listu vodoravno, centrirano oko centerX.
+    const placeRow = (list: typeof visibleNodes, y: number) => {
+      list.forEach((n, i) => {
+        const x = centerX + (i - (list.length - 1) / 2) * spread
+        resultNodes.push({
+          id: n.ip,
+          type: "device",
+          position: { x, y },
+          data: {
+            ip: n.ip,
+            deviceType: n.device_type,
+            status: n.status,
+            name: n.name,
+          },
+        })
       })
-    })
+    }
 
-    others.forEach((n, i) => {
-      const angle = (2 * Math.PI * i) / others.length - Math.PI / 2
+    placeRow(hmis, yTop)      // HMI gore
+    placeRow(scadas, yMid)    // SCADA u sredini
+    placeRow(plcs, yBottom)   // PLC-ovi dole
+
+    // Ostali (napadac, nepoznati) sa LEVE strane, vertikalno.
+    rest.forEach((n, i) => {
       resultNodes.push({
         id: n.ip,
         type: "device",
-        position: {
-          x: centerX + radius * Math.cos(angle),
-          y: centerY + radius * Math.sin(angle),
+        position: { x: centerX - 400, y: yMid + i * 160 },
+        data: {
+          ip: n.ip,
+          deviceType: n.device_type,
+          status: n.status,
+          name: n.name,
         },
-        data: { ip: n.ip, deviceType: n.device_type, status: n.status },
       })
     })
 
