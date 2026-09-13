@@ -5,7 +5,7 @@ PCAPS="tests/pcaps/calm_plc1.pcap,tests/pcaps/calm_plc2.pcap,tests/pcaps/calm_sc
 TELEMETRY="tests/telemetry/calm_telemetry.jsonl"
 
 echo "╔══════════════════════════════════════════════╗"
-echo "║   TEST 1 — MIRAN SCENARIO (normalan rad)      ║"
+echo "║   TEST 1 — MIRAN SCENARIO (normalan rad)     ║"
 echo "╚══════════════════════════════════════════════╝"
 echo ""
 
@@ -46,6 +46,6 @@ docker compose exec -T db psql -U otedge -d otedge -c "
 
 echo ""
 echo "╔══════════════════════════════════════════════╗"
-echo "║  MIRAN SCENARIO UCITAN — otvori dashboard:    ║"
-echo "║  http://localhost:5173                        ║"
+echo "║  MIRAN SCENARIO UCITAN — otvori dashboard:   ║"
+echo "║  http://localhost:5173                       ║"
 echo "╚══════════════════════════════════════════════╝"

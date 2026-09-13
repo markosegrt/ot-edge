@@ -5,7 +5,7 @@ PCAPS="tests/pcaps/attack_plc1.pcap,tests/pcaps/attack_plc2.pcap,tests/pcaps/att
 TELEMETRY="tests/telemetry/attack_telemetry.jsonl"
 
 echo "╔══════════════════════════════════════════════╗"
-echo "║   TEST 2 — NAPAD SCENARIO (bogat napad)       ║"
+echo "║   TEST 2 — NAPAD SCENARIO (bogat napad)      ║"
 echo "╚══════════════════════════════════════════════╝"
 echo ""
 
@@ -51,6 +51,6 @@ docker compose exec -T db psql -U otedge -d otedge -c "
 
 echo ""
 echo "╔══════════════════════════════════════════════╗"
-echo "║  NAPAD SCENARIO UCITAN — otvori dashboard:    ║"
-echo "║  http://localhost:5173                        ║"
+echo "║  NAPAD SCENARIO UCITAN — otvori dashboard:   ║"
+echo "║  http://localhost:5173                       ║"
 echo "╚══════════════════════════════════════════════╝"

@@ -50,12 +50,25 @@ class CorrelationController:
         if alert is None:
             return None
 
-        start = alert.timestamp - timedelta(seconds=WINDOW_SECONDS)
-        end = alert.timestamp + timedelta(seconds=LOOKAHEAD_SECONDS)
+        extra = alert.extra or {}
+        first_raw = extra.get("flow_first_seen")
+        last_raw = extra.get("flow_last_seen")
+
+        if first_raw and last_raw:
+            start = datetime.fromisoformat(first_raw) - timedelta(seconds=WINDOW_SECONDS)
+            end = datetime.fromisoformat(last_raw) + timedelta(seconds=LOOKAHEAD_SECONDS)
+        else:
+            start = alert.timestamp - timedelta(seconds=WINDOW_SECONDS)
+            end = alert.timestamp + timedelta(seconds=LOOKAHEAD_SECONDS)
 
         telemetry = self.telemetry_repository.get_between(start, end)
 
-        # Korelacioni opis iz zasebne tabele (ako postoji za ovaj alarm).
+        target_ip = alert.destination
+        filtered = [
+            t for t in telemetry
+            if getattr(t, "device_ip", None) == target_ip
+        ]
+
         corr = self.correlation_repository.get_by_event_id(alert_id)
         correlation_detail = None
         if corr is not None:
@@ -80,7 +93,7 @@ class CorrelationController:
             window_end=end,
             telemetry=[
                 TelemetryPointResponse(timestamp=t.timestamp, tag=t.tag, value=t.value)
-                for t in telemetry
+                for t in filtered
             ],
             correlation=correlation_detail,
         )

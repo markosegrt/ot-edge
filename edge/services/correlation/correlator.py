@@ -40,6 +40,7 @@ TAG_LABELS = {
 
 PATTERN_WRITE_TO_DANGER = "WRITE_TO_DANGER"
 PATTERN_UNKNOWN_ACCESS_WITH_CHANGE = "UNKNOWN_ACCESS_WITH_CHANGE"
+PATTERN_UNKNOWN_ACCESS_NO_CHANGE = "UNKNOWN_ACCESS_NO_CHANGE"
 
 
 class BasicCorrelator(Correlator):
@@ -151,6 +152,26 @@ class BasicCorrelator(Correlator):
                 if not details.get("process_change"):
                     score += 2
                     details["process_change"] = True
+            else:
+                # Nepoznat pristup PLC-u BEZ procesne promene. Sumnjivo, ali bez
+                # potvrdjene fizicke posledice -> ostaje HIGH (ne dizemo score).
+                # Ipak dobija opis, da kartica nije prazna i da se vidi RAZLIKA
+                # naspram slucaja sa promenom (koji ide na CRITICAL).
+                pattern = PATTERN_UNKNOWN_ACCESS_NO_CHANGE
+                network_summary = (
+                    f"Nepoznat/neovlašćen uređaj {alert.source} komunicira sa "
+                    f"PLC-om {alert.destination} (nije u listi poznatih uređaja)."
+                )
+                process_summary = (
+                    f"U posmatranom periodu proces se NIJE menjao — pristup "
+                    f"nije praćen procesnom posledicom."
+                )
+                link_summary = (
+                    f"Nepoznat uređaj priča sa PLC-om, ali proces miruje. To liči "
+                    f"na izviđanje/osmatranje, ne na aktivnu sabotažu. Zato ostaje "
+                    f"{base_severity.value} — sumnjivo, ali bez potvrđenog fizičkog "
+                    f"uticaja."
+                )
 
         else:
             danger = self._dangerous_value(telemetry)

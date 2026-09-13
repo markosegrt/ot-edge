@@ -18,7 +18,7 @@ pauza() {
 clear
 echo -e "${BOLD}${CYAN}"
 echo "╔══════════════════════════════════════════════╗"
-echo "║      OT EDGE — DEMONSTRACIJA LABORATORIJE      ║"
+echo "║      OT EDGE — DEMONSTRACIJA LABORATORIJE    ║"
 echo "╚══════════════════════════════════════════════╝"
 echo -e "${RESET}"
 echo "Ovaj lab simulira industrijsko postrojenje kroz vise kontejnera,"
@@ -73,6 +73,6 @@ pauza
 
 echo -e "${BOLD}${GREEN}"
 echo "╔══════════════════════════════════════════════╗"
-echo "║  Sve komponente rade. Fabrika zivi i prica.    ║"
+echo "║  Sve komponente rade. Fabrika zivi i prica.  ║"
 echo "╚══════════════════════════════════════════════╝"
 echo -e "${RESET}"

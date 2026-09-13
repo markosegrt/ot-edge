@@ -13,6 +13,7 @@ const PATTERN_LABELS: Record<string, string> = {
   CHANGE_WITHOUT_COMMAND: "Promena procesa bez komande",
   COMMAND_WITHOUT_CHANGE: "Komanda bez očekivane promene",
   UNKNOWN_ACCESS_WITH_CHANGE: "Nepoznat pristup uz promenu procesa",
+  UNKNOWN_ACCESS_NO_CHANGE: "Nepoznat pristup bez promene procesa",
 }
 
 export function CorrelationPage() {
@@ -120,6 +121,9 @@ function CorrelationCard({
   onShowChart: () => void
 }) {
   const c = ctx.correlation
+  // Da li je korelacija PODIGLA ozbiljnost (npr. HIGH -> CRITICAL) ili je
+  // ostala ista (HIGH -> HIGH). Od toga zavisi tekst i boja zakljucka.
+  const escalated = c ? c.base_severity !== c.final_severity : false
 
   return (
     <div>
@@ -144,20 +148,34 @@ function CorrelationCard({
           <CardSection index="1" title="Na mreži" text={c.network_summary} />
           <CardSection index="2" title="U procesu" text={c.process_summary} />
           <CardSection index="3" title="Veza" text={c.link_summary} />
-          <div className="p-4 bg-red-500/10 border-t border-red-500/30">
-            <div className="text-sm font-semibold text-red-300 mb-1">
-              4 · Zaključak
+          {escalated ? (
+            <div className="p-4 bg-red-500/10 border-t border-red-500/30">
+              <div className="text-sm font-semibold text-red-300 mb-1">
+                4 · Zaključak
+              </div>
+              <p className="text-sm text-slate-200 leading-relaxed">
+                Bez procesnog konteksta ozbiljnost bi bila{" "}
+                <span className="font-semibold">{c.base_severity}</span>. Sa
+                procesnim kontekstom sistem je podigao na{" "}
+                <span className="font-semibold text-red-300">
+                  {c.final_severity}
+                </span>
+                . Mreža sama ovo ne bi videla kao kritično.
+              </p>
             </div>
-            <p className="text-sm text-slate-200 leading-relaxed">
-              Bez procesnog konteksta ozbiljnost bi bila{" "}
-              <span className="font-semibold">{c.base_severity}</span>. Sa
-              procesnim kontekstom sistem je podigao na{" "}
-              <span className="font-semibold text-red-300">
-                {c.final_severity}
-              </span>
-              . Mreža sama ovo ne bi videla kao kritično.
-            </p>
-          </div>
+          ) : (
+            <div className="p-4 bg-slate-800/40 border-t border-slate-600">
+              <div className="text-sm font-semibold text-slate-300 mb-1">
+                4 · Zaključak
+              </div>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                Ozbiljnost ostaje{" "}
+                <span className="font-semibold">{c.final_severity}</span>.
+                Procesni kontekst nije potvrdio fizičku posledicu, pa se događaj
+                ne eskalira — sumnjiv je, ali nije kritičan.
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <p className="text-slate-400 text-sm mb-5">
